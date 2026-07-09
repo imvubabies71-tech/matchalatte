@@ -645,4 +645,4 @@ if CureData then
     if lr then notify("The Cure is on the map! Distance: " .. math_floor((CureData - lr.Position).Magnitude) .. "s", "Cure Info", 5)
     else notify("The Cure is on the map!", "Cure Info", 5) end
 end
-notify("Welcome!", "Dav's Gui - The Vampire Legends Hub", 6)
+notify("Welcome!", "Dav's Gui - The Vampire Legends Blackies", 6)
