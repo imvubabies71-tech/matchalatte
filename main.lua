@@ -33,7 +33,7 @@ if not isAllowed then
     return
 end
 
-print("a nigger got whitelisted")
+print("a nigger executed")
 
  -- Dav's Gui - The Vampire Legends Hub (FINAL FIXED VERSION - ALL COLORS + SAFE TOOLS)
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
