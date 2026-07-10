@@ -1,4 +1,4 @@
--- Dav's Gui - The Vampire Legends Hub (Matcha Version)
+-- Dav's Gui - The Vampire Legends Hub (Matcha Version) - FIXED
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
 
 local win = Lib:CreateWindow({
@@ -78,7 +78,7 @@ local function notify(message, title, duration)
     Lib:Notify(title or "Dav's Gui", message, duration or 5)
 end
 
--- ===== FUNCTIE PENTRU A VERIFICA DACÄ‚ ESTE BODY JUMPED =====
+-- ===== FUNCTIE PENTRU A VERIFICA DACĂ ESTE BODY JUMPED =====
 local function CheckIfBodyJumped(plr)
     if not plr then return false end
     local char = plr.Character
@@ -95,7 +95,7 @@ local function CheckIfBodyJumped(plr)
     return false
 end
 
--- ===== FUNCTIE PENTRU A VERIFICA DACÄ‚ JUCÄ‚TORUL ESTE QETSIYAH =====
+-- ===== FUNCTIE PENTRU A VERIFICA DACĂ JUCĂTORUL ESTE QETSIYAH =====
 local function IsQetsiyah(plr)
     if not plr then return false end
     local charName = plr:GetAttribute("CharacterName")
@@ -120,7 +120,7 @@ end
 local PlayerCache = {}
 local ItemCache = {}
 local PlantCache = {}
-local IWOSCache = {} -- Will store {position, source, playerName}
+local IWOSCache = {}
 local CureData = nil
 local TextCache = {}
 local BodyJumpedCache = {}
@@ -213,7 +213,7 @@ settingsSection:Button("Unload", function()
     end})
 end)
 
--- ===== ITEM HELPER (RE-ADAUGAT PENTRU CA BACKPACK ITEMS SÄ‚ MERGÄ‚) =====
+-- ===== ITEM HELPER =====
 local function GetItemsFromPlayer(plr)
     local items = {}
     local function check(obj)
@@ -253,7 +253,6 @@ local function UpdatePlayerCache()
                 
                 local plr = P:FindFirstChild(displayName)
                 
-                -- DacÄƒ nu gÄƒsim jucÄƒtorul dupÄƒ displayName, Ã®nseamnÄƒ cÄƒ e Body Jumped
                 if not plr then
                     for _, p in ipairs(P:GetPlayers()) do
                         if p.Name ~= MY_NAME then
@@ -286,9 +285,8 @@ local function UpdatePlayerCache()
                     local isBodyJumped = BodyJumpedCache[plr.Name] or false
                     
                     if isBodyJumped then
-                        -- FORÈšÄ‚M NUMELE SÄ‚ FIE CEL REAL DIN DICÈšIONARUL N
                         nm = N[charNameTag] or charNameTag
-                        sp = "Witch" -- Asta asigurÄƒ culoarea MOV
+                        sp = "Witch"
                     end
                     
                     local color = Color3_fromRGB(255, 255, 255)
@@ -317,7 +315,6 @@ local function UpdatePlayerCache()
                     
                     local parts = {}
                     if isBodyJumped then
-                        -- ACUM SCRIE DOAR [Body Jumped] Esther Mikaelson (sau Rebekah, Klaus etc.) fÄƒrÄƒ "Bloodwitch"
                         parts[#parts + 1] = "[Body Jumped] " .. nm
                     else
                         if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
@@ -479,7 +476,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
 
-        -- PLAYER ESP (CU LOGICA PENTRU BODY JUMPED)
+    -- PLAYER ESP
     if Options.EnablePlayerESP then
         local maxDistSq = Options.MaxDist * Options.MaxDist
         local showName  = Options.ShowPlayerName
@@ -503,13 +500,10 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 local px, py = screenPos.X, screenPos.Y
                                 local currentY = py
                                 
-                                -- [LOGICA NOUA] VerificÄƒm dacÄƒ e Body Jumped direct din cache
                                 if BodyJumpedCache[name] then
-                                    -- DacÄƒ e Body Jumped, forÈ›Äƒm textul È™i culoarea MOV
                                     PushText("[Body Jumped] " .. data.nm, px, currentY, 14, Color3_fromRGB(195, 145, 195))
                                     currentY = currentY + 16
                                 else
-                                    -- Logica normalÄƒ pentru ceilalÈ›i jucÄƒtori
                                     local sp = data.sp
                                     local color = Color3_fromRGB(255, 255, 255)
                                     
@@ -611,7 +605,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- PLANT ESP
+    -- PLANT ESP (FIXED)
     if Options.EnablePlantESP then
         local plantMaxDistSq = Options.PlantMaxDist * Options.PlantMaxDist
         local showPlantName = Options.ShowPlantName
@@ -619,46 +613,48 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         
         for i = 1, #PlantCache do
             local plantData = PlantCache[i]
-            local rt = plantData.root
-            if rt then
-                local nm = plantData.name
-                local plantVis = false
-                if nm == PLANT_NAMES[1] then plantVis = Options.ShowWolfsbane
-                elseif nm == PLANT_NAMES[2] then plantVis = Options.ShowVampite
-                elseif nm == PLANT_NAMES[3] then plantVis = Options.ShowSenia
-                elseif nm == PLANT_NAMES[4] then plantVis = Options.ShowMooncap
-                elseif nm == PLANT_NAMES[5] then plantVis = Options.ShowNightshade
-                elseif nm == PLANT_NAMES[6] then plantVis = Options.ShowAerpine
-                elseif nm == PLANT_NAMES[7] then plantVis = Options.ShowYarrow
-                elseif nm == PLANT_NAMES[8] then plantVis = Options.ShowArcanith
-                elseif nm == PLANT_NAMES[9] then plantVis = Options.ShowDerrida
-                elseif nm == PLANT_NAMES[10] then plantVis = Options.ShowSanguinia
-                elseif nm == PLANT_NAMES[11] then plantVis = Options.ShowPerennia end
-                
-                if plantVis then
-                    local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
-                    local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
+            if plantData then  -- ADAUGAT: verificare pentru nil
+                local rt = plantData.root
+                if rt then
+                    local nm = plantData.name
+                    local plantVis = false
+                    if nm == PLANT_NAMES[1] then plantVis = Options.ShowWolfsbane
+                    elseif nm == PLANT_NAMES[2] then plantVis = Options.ShowVampite
+                    elseif nm == PLANT_NAMES[3] then plantVis = Options.ShowSenia
+                    elseif nm == PLANT_NAMES[4] then plantVis = Options.ShowMooncap
+                    elseif nm == PLANT_NAMES[5] then plantVis = Options.ShowNightshade
+                    elseif nm == PLANT_NAMES[6] then plantVis = Options.ShowAerpine
+                    elseif nm == PLANT_NAMES[7] then plantVis = Options.ShowYarrow
+                    elseif nm == PLANT_NAMES[8] then plantVis = Options.ShowArcanith
+                    elseif nm == PLANT_NAMES[9] then plantVis = Options.ShowDerrida
+                    elseif nm == PLANT_NAMES[10] then plantVis = Options.ShowSanguinia
+                    elseif nm == PLANT_NAMES[11] then plantVis = Options.ShowPerennia end
                     
-                    if dx*dx + dy*dy + dz*dz <= plantMaxDistSq then
-                        local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + PLANT_Y_OFFSET, rz))
-                        if onScreen then
-                            local plantColor = COLOR_GREEN
-                            if nm == PLANT_NAMES[1] then plantColor = PLANT_COLORS[1]
-                            elseif nm == PLANT_NAMES[2] then plantColor = PLANT_COLORS[2]
-                            elseif nm == PLANT_NAMES[3] then plantColor = PLANT_COLORS[3]
-                            elseif nm == PLANT_NAMES[4] then plantColor = PLANT_COLORS[4]
-                            elseif nm == PLANT_NAMES[5] then plantColor = PLANT_COLORS[5]
-                            elseif nm == PLANT_NAMES[6] then plantColor = PLANT_COLORS[6]
-                            elseif nm == PLANT_NAMES[7] then plantColor = PLANT_COLORS[7]
-                            elseif nm == PLANT_NAMES[8] then plantColor = PLANT_COLORS[8]
-                            elseif nm == PLANT_NAMES[9] then plantColor = PLANT_COLORS[9]
-                            elseif nm == PLANT_NAMES[10] then plantColor = PLANT_COLORS[10]
-                            elseif nm == PLANT_NAMES[11] then plantColor = PLANT_COLORS[11] end
-                            
-                            if showPlantName then PushText(nm, screenPos.X, screenPos.Y - 6, 12, plantColor) end
-                            if showPlantDist then
-                                local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                                PushText(dist .. "s", screenPos.X, screenPos.Y + 6, 12, COLOR_OFFWHITE)
+                    if plantVis then
+                        local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
+                        local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
+                        
+                        if dx*dx + dy*dy + dz*dz <= plantMaxDistSq then
+                            local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + PLANT_Y_OFFSET, rz))
+                            if onScreen then
+                                local plantColor = COLOR_GREEN
+                                if nm == PLANT_NAMES[1] then plantColor = PLANT_COLORS[1]
+                                elseif nm == PLANT_NAMES[2] then plantColor = PLANT_COLORS[2]
+                                elseif nm == PLANT_NAMES[3] then plantColor = PLANT_COLORS[3]
+                                elseif nm == PLANT_NAMES[4] then plantColor = PLANT_COLORS[4]
+                                elseif nm == PLANT_NAMES[5] then plantColor = PLANT_COLORS[5]
+                                elseif nm == PLANT_NAMES[6] then plantColor = PLANT_COLORS[6]
+                                elseif nm == PLANT_NAMES[7] then plantColor = PLANT_COLORS[7]
+                                elseif nm == PLANT_NAMES[8] then plantColor = PLANT_COLORS[8]
+                                elseif nm == PLANT_NAMES[9] then plantColor = PLANT_COLORS[9]
+                                elseif nm == PLANT_NAMES[10] then plantColor = PLANT_COLORS[10]
+                                elseif nm == PLANT_NAMES[11] then plantColor = PLANT_COLORS[11] end
+                                
+                                if showPlantName then PushText(nm, screenPos.X, screenPos.Y - 6, 12, plantColor) end
+                                if showPlantDist then
+                                    local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
+                                    PushText(dist .. "s", screenPos.X, screenPos.Y + 6, 12, COLOR_OFFWHITE)
+                                end
                             end
                         end
                     end
