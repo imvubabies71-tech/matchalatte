@@ -56,25 +56,16 @@ end
 -- ===== FUNCTIE PENTRU A VERIFICA DACĂ ESTE BODY JUMPED =====
 local function CheckIfBodyJumped(plr)
     if not plr then return false end
-    
     local char = plr.Character
     if char then
         if plr:GetAttribute("BodyJumped") then
             local jumpedBy = plr:GetAttribute("BodyJumpedBy")
-            if jumpedBy == "Esther Mikaelson" then
-                return true
-            end
+            if jumpedBy == "Esther Mikaelson" then return true end
         end
-        
         for _, child in pairs(char:GetChildren()) do
-            if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then
-                return true
-            end
+            if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then return true end
         end
-        
-        if char:FindFirstChild("BodyJumped") then
-            return true
-        end
+        if char:FindFirstChild("BodyJumped") then return true end
     end
     return false
 end
@@ -82,12 +73,8 @@ end
 -- ===== FUNCTIE PENTRU A VERIFICA DACĂ JUCĂTORUL ESTE QETSIYAH =====
 local function IsQetsiyah(plr)
     if not plr then return false end
-    
     local charName = plr:GetAttribute("CharacterName")
-    if charName == "Qetsiyah" or charName == "Ancient Witch" then
-        return true
-    end
-    
+    if charName == "Qetsiyah" or charName == "Ancient Witch" then return true end
     local char = plr.Character
     if char then
         local head = char:FindFirstChild("Head")
@@ -95,15 +82,12 @@ local function IsQetsiyah(plr)
             for _, child in pairs(head:GetChildren()) do
                 if child:IsA("BillboardGui") then
                     for _, label in pairs(child:GetDescendants()) do
-                        if label:IsA("TextLabel") and label.Text == "Qetsiyah" then
-                            return true
-                        end
+                        if label:IsA("TextLabel") and label.Text == "Qetsiyah" then return true end
                     end
                 end
             end
         end
     end
-    
     return false
 end
 
@@ -131,7 +115,6 @@ ToolsESP:Toggle("Enable IWOS ESP", Options.EnableToolsESP, function(on) Options.
 ToolsESP:Toggle("Enable Cure ESP", Options.EnableCureESP, function(on) Options.EnableCureESP = on; notify("Cure ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
 ToolsESP:Slider("Max Distance", Options.ToolsMaxDist, 500, 500, 10000, "s", function(v) Options.ToolsMaxDist = v end)
 
--- BUTOANE CHECK IWOS SI CHECK CURE
 ToolsESP:Button("Check IWOS", function()
     if #IWOSCache > 0 then
         notify("IWOS found on map! (" .. #IWOSCache .. " total)", "IWOS Check", 3)
@@ -211,12 +194,8 @@ local function GetItemsFromPlayer(plr)
     local function check(obj)
         if not obj then return end
         local n = obj.Name
-        if n == "TheCure" then 
-            items[#items + 1] = "Cure"
-        elseif n == "QetsiyahCure" then 
-            if IsQetsiyah(plr) then
-                items[#items + 1] = "QetCure"
-            end
+        if n == "TheCure" then items[#items + 1] = "Cure"
+        elseif n == "QetsiyahCure" then if IsQetsiyah(plr) then items[#items + 1] = "QetCure" end
         elseif n:find("RedOak") then items[#items + 1] = "RedOak"
         elseif n:find("WhiteOak") and not n:find("Indestructible") then items[#items + 1] = "WhiteOak"
         elseif n:find("Indestructible") then items[#items + 1] = "IWOS" end
@@ -228,20 +207,17 @@ local function GetItemsFromPlayer(plr)
     return items
 end
 
--- ===== CACHE UPDATE FUNCTIONS =====
+-- ===== CACHE UPDATE FUNCTIONS (REPARATE) =====
 local function UpdatePlayerCache()
     local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
-    
     local new = {}
     local newTextCache = {}
     for _, t in pairs(fd:GetChildren()) do
         if t:IsA("BillboardGui") then
             local tx = {}
             for _, c in pairs(t:GetDescendants()) do
-                if c:IsA("TextLabel") and c.Text ~= "" then
-                    tx[#tx + 1] = c.Text
-                end
+                if c:IsA("TextLabel") and c.Text ~= "" then tx[#tx + 1] = c.Text end
             end
             if #tx >= 3 and tx[3] ~= MY_NAME then
                 local plr = P:FindFirstChild(tx[3])
@@ -249,23 +225,10 @@ local function UpdatePlayerCache()
                     local rawSpecie = tx[1]
                     local sp = S[rawSpecie] or rawSpecie
                     local nm = N[tx[2]] or tx[2]
+                    if nm == "Qetsiyah" or tx[2] == "Qetsiyah" or tx[2] == "Ancient Witch" then QetsiyahCache[plr.Name] = true else QetsiyahCache[plr.Name] = false end
                     
-                    -- Verifică dacă este Qetsiyah
-                    if nm == "Qetsiyah" or tx[2] == "Qetsiyah" or tx[2] == "Ancient Witch" then
-                        QetsiyahCache[plr.Name] = true
-                    else
-                        QetsiyahCache[plr.Name] = false
-                    end
-                    
-                    -- VERIFICĂ DACĂ ESTE BODY JUMPED
                     local isBodyJumped = CheckIfBodyJumped(plr)
-                    if isBodyJumped then
-                        nm = "Esther Mikaelson"
-                        sp = "Possessed"
-                        BodyJumpedCache[plr.Name] = true
-                    else
-                        BodyJumpedCache[plr.Name] = false
-                    end
+                    if isBodyJumped then nm = "Esther Mikaelson"; sp = "Possessed"; BodyJumpedCache[plr.Name] = true else BodyJumpedCache[plr.Name] = false end
                     
                     if sp == "Immortal" then nm = (tx[2] == "The Anchor" or tx[2] == "Amara") and "Amara" or "Silas" end
                     
@@ -294,14 +257,12 @@ local function UpdatePlayerCache()
                     new[tx[3]] = {sp = sp, nm = nm, color = color, player = plr}
                     
                     local parts = {}
-                    -- Dacă este body jumped, afișează mereu [Body Jumped] fără a depinde de ShowSpecies
-                    if isBodyJumped then
-                        parts[#parts + 1] = "[Body Jumped] " .. nm
+                    if isBodyJumped then parts[#parts + 1] = "[Body Jumped] " .. nm
                     else
                         if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
                         if Options.ShowRealName then parts[#parts + 1] = nm end
                     end
-                    newTextCache[tx[3]] = table.concat(parts, " ")
+                    newTextCache[tx[3]] = table_concat(parts, " ")
                 end
             end
         end
@@ -310,14 +271,19 @@ local function UpdatePlayerCache()
     TextCache = newTextCache
 end
 
+-- ===== CACHE UPDATE FUNCTIONS (REPARAT PENTRU A ELIMINA DUPLICATELE) =====
 local function UpdateIWOSCache()
     local newIWOS = {}
     local iwosFolder = W:FindFirstChild("IndestructibleWhiteOakStake")
     if iwosFolder then
+        local seen = {} -- Tabel pentru a verifica duplicatele
         for _, stake in pairs(iwosFolder:GetChildren()) do
             local rt = stake:IsA("BasePart") and stake or (stake:IsA("Model") and stake.PrimaryPart)
             if not rt then for _, p in pairs(stake:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
-            if rt then newIWOS[#newIWOS + 1] = rt end
+            if rt and not seen[rt] then -- Verifică dacă nu a fost deja adăugat
+                seen[rt] = true
+                newIWOS[#newIWOS + 1] = rt
+            end
         end
     end
     IWOSCache = newIWOS
@@ -331,14 +297,8 @@ end
 
 -- ===== SIMPLE POLLING UPDATE =====
 task_spawn(function()
-    while true do
-        task_wait(1)
-        UpdatePlayerCache()
-        UpdateIWOSCache()
-        UpdateCureCache()
-    end
+    while true do task_wait(1) UpdatePlayerCache() UpdateIWOSCache() UpdateCureCache() end
 end)
-
 task_spawn(function()
     while true do
         task_wait(2)
@@ -351,9 +311,7 @@ task_spawn(function()
                         local char = plr.Character
                         if char then
                             local hrp = char:FindFirstChild("HumanoidRootPart")
-                            if hrp and (hrp.Position - lrp).Magnitude <= 500 then 
-                                ItemCache[plr.Name] = GetItemsFromPlayer(plr) 
-                            end
+                            if hrp and (hrp.Position - lrp).Magnitude <= 500 then ItemCache[plr.Name] = GetItemsFromPlayer(plr) end
                         end
                     end
                 end
@@ -361,7 +319,6 @@ task_spawn(function()
         end
     end
 end)
-
 task_spawn(function()
     while true do
         task_wait(5)
@@ -414,7 +371,6 @@ for i = 1, MAX_DRAWINGS do
 end
 
 local drawIdx = 0
-
 local function PushText(text, x, y, size, color)
     drawIdx = drawIdx + 1
     if drawIdx > MAX_DRAWINGS then return end
@@ -444,7 +400,7 @@ local PLANT_COLORS = {
     Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
 }
 
--- ===== 60 FPS RENDER LOOP =====
+-- ===== 60 FPS RENDER LOOP (REPARAT) =====
 local TARGET_FPS = 60
 local FRAME_TIME = 1 / TARGET_FPS
 local lpx, lpy, lpz = 0, 0, 0
@@ -458,20 +414,14 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     drawIdx = 0
     
     local lpChar = LP.Character
-    if not lpChar or not lpChar:IsDescendantOf(W) then
-        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
-        return
-    end
+    if not lpChar or not lpChar:IsDescendantOf(W) then for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end return end
     
     local lpRoot = lpChar:FindFirstChild("HumanoidRootPart")
-    if not lpRoot then
-        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
-        return
-    end
+    if not lpRoot then for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end return end
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
     
-    -- PLAYER ESP
+        -- PLAYER ESP
     if Options.EnablePlayerESP then
         local maxDistSq = Options.MaxDist * Options.MaxDist
         local showName  = Options.ShowPlayerName
@@ -486,34 +436,34 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                     local head = char:FindFirstChild("Head")
                     if head then
                         local pos = head.Position
-                        local dx = pos.X - lpx
-                        local dy = pos.Y - lpy
-                        local dz = pos.Z - lpz
+                        local dx = pos.X - lpx; local dy = pos.Y - lpy; local dz = pos.Z - lpz
                         local distSq = dx*dx + dy*dy + dz*dz
                         
                         if distSq <= maxDistSq then
                             local screenPos, onScreen = WorldToScreen(pos)
-                            
                             if onScreen then
                                 local px, py = screenPos.X, screenPos.Y
                                 local currentY = py
                                 
-                                -- Dacă este body jumped, afișează [Body Jumped] Esther Mikaelson cu auriu
                                 if BodyJumpedCache[name] then
                                     PushText("[Body Jumped] Esther Mikaelson", px, currentY, 16, COLOR_GOLD)
                                     currentY = currentY + 18
                                 else
-                                    -- Text normal
                                     local cachedText = TextCache[name]
-                                    if cachedText then
-                                        PushText(cachedText, px, currentY, 14, data.color)
-                                        currentY = currentY + 16
+                                    if cachedText then 
+                                        PushText(cachedText, px, currentY, 14, data.color) 
+                                        currentY = currentY + 16 
                                     end
                                 end
                                 
+                                -- REPARAȚIE: Afișează numele jucătorului DOAR dacă nu este deja inclus în cachedText
                                 if showName then
-                                    PushText(name, px, currentY, 14, COLOR_GRAY)
-                                    currentY = currentY + 16
+                                    local cachedText = TextCache[name]
+                                    -- Dacă textul din cache NU conține deja numele, îl afișăm separat
+                                    if not cachedText or not cachedText:find(name) then
+                                        PushText(name, px, currentY, 14, COLOR_GRAY)
+                                        currentY = currentY + 16
+                                    end
                                 end
                                 
                                 if showDist then
@@ -524,9 +474,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 
                                 if showItems then
                                     local items = ItemCache[name]
-                                    if items and #items > 0 then
-                                        PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY)
-                                    end
+                                    if items and #items > 0 then PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY) end
                                 end
                             end
                         end
@@ -536,9 +484,10 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- TOOLS ESP
+        -- TOOLS ESP (REPARAT DEFINITIV PENTRU A NU DESENA DUPLICATE)
     if Options.EnableToolsESP then
         local toolsMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
+        local lastIwosPos = nil -- Reținem poziția ultimului țăruș desenat
         
         for i = 1, #IWOSCache do
             local rt = IWOSCache[i]
@@ -546,12 +495,19 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                 local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
                 local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
                 
+                -- Verifică dacă acest țăruș este prea aproape de ultimul pe care l-am desenat (sub 2 studs)
+                if lastIwosPos then
+                    local distBetween = (Vector3_new(rx, ry, rz) - lastIwosPos).Magnitude
+                    if distBetween < 2 then continue end -- Sărim peste acest duplicat fizic
+                end
+                
                 if dx*dx + dy*dy + dz*dz <= toolsMaxDistSq then
                     local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + TOOL_Y_OFFSET, rz))
                     if onScreen then
                         local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
                         PushText("[Indestructible]", screenPos.X, screenPos.Y - 6, 14, DEFAULT_WHITE)
                         PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, COLOR_OFFWHITE)
+                        lastIwosPos = Vector3_new(rx, ry, rz) -- Actualizăm poziția ultimului desenat
                     end
                 end
             end
@@ -584,7 +540,6 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
             local rt = plantData.root
             if rt then
                 local nm = plantData.name
-                
                 local plantVis = false
                 if nm == PLANT_NAMES[1] then plantVis = Options.ShowWolfsbane
                 elseif nm == PLANT_NAMES[2] then plantVis = Options.ShowVampite
@@ -618,9 +573,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                             elseif nm == PLANT_NAMES[10] then plantColor = PLANT_COLORS[10]
                             elseif nm == PLANT_NAMES[11] then plantColor = PLANT_COLORS[11] end
                             
-                            if showPlantName then
-                                PushText(nm, screenPos.X, screenPos.Y - 6, 12, plantColor)
-                            end
+                            if showPlantName then PushText(nm, screenPos.X, screenPos.Y - 6, 12, plantColor) end
                             if showPlantDist then
                                 local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
                                 PushText(dist .. "s", screenPos.X, screenPos.Y + 6, 12, COLOR_OFFWHITE)
