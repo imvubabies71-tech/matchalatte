@@ -47,7 +47,7 @@ local Options = {
 -- ===== DICTIONARIES =====
 local N = {["The Hybrid"]="Klaus Mikaelson",["Loyal Sister"]="Rebekah Mikaelson",["Noble Brother"]="Elijah Mikaelson",["Lost Sister"]="Freya Mikaelson",["sis"]="Freya Mikaelson",["The Miracle"]="Hope Mikaelson",["The Imposter"]="Katherine Pierce",["The Ripper"]="Stefan Salvatore",["The Sarcastic"]="Damon Salvatore",["Town Witch"]="Bonnie Bennett",["Attic Witch"]="Davina Claire",["The Muse"]="Cleo Sowande",["Ancient Witch"]="Qetsiyah",["The King"]="Marcel Gerard",["The Trickster"]="Silas",["The Phoenix"]="Landon Kirby",["The Headmaster"]="Alaric Saltzman",["The Hunter"]="Jeremy Gilbert",["The Mentor"]="Alexia Branson",["The Control Freak"]="Caroline Forbes",["Original Witch"]="Esther Mikaelson",["The Sociopath"]="Malachi Kai Parker",["The Doppelganger"]="Elena Gilbert",["Alpha Wolf"]="Jackson Kenner",["Quarterback"]="Tyler Lockwood",["Crescent Queen"]="Hayley Marshall-Kenner",["First Bloodwitch"]="Valerie Tulle",["The Anchor"]="Amara",["The Friend"]="Matt Donovan",["The Therapist"]="Camille O'Connor",["The Sheriff"]="Liz Forbes",["The Guardian"]="Jenna Sommers",["The Mayor"]="Carol Lockwood",["The Fairy"]="Wade Rivers",["Silent Bloodwitch"]="Beau",["The Nerd"]="Milton MG Greasley",["The Dragon"]="Kaleb Hawkins",["The Charmer"]="Damon Salvatore",["Siphoner Witch"]="Josie Saltzman",["Siphoner Twin"]="Lizzie Saltzman",["Dark Siphoner"]="Dark Josie",["Viking Warrior"]="Mikael Mikaelson",["Deranged Brother"]="Kol Mikaelson",["Outcast Brother"]="Finn Mikaelson",["The Lover"]="Sage",["The Selfish"]="Isobel Flemming",["Troubled Girl"]="Vicki Donovan",["The Loyal"]="Joshua Josh Rosza",["The Runaway"]="Rose",["The Fierce Protector"]="Pearl Zhu",["Adoptive Mother"]="Lily Salvatore",["The Rebellious"]="Annabelle Zhu",["The Traveler"]="Nadia Petrova",["The Firstborn"]="Lucien Castle",["The Assassin"]="Aya Al-Rashid",["The Unhinged"]="Aurora De Martel",["The Leader"]="Tristan De Martel",["The Merciless"]="Sebastian The Merciless",["The Obsessed"]="Roman",["Coven Ancestor"]="Genevieve",["Ritual Leader"]="Bastianna Natale",["Fortune Teller"]="Agnes",["Regent"]="Josephine LaRue",["Voodoo King"]="Papa Tunde",["Ancestral Guardian"]="Vincent Griffith",["The Doctor"]="Josette Jo Parker",["Lost Twin"]="Olivia Parker",["Protective Twin"]="Luke Parker",["Popular Girl"]="Alyssa Chang",["The Sacrifice"]="Monique Deveraux",["Quarter Witch"]="Sophie Deveraux",["Cousin"]="Lucy Bennett",["Grandmother"]="Sheila Bennett",["Absent Mother"]="Abby Bennett",["Vengeful Spirit"]="Celeste Dubois",["Manipulative Father"]="Jonas Martin",["The Pawn"]="Luca Martin",["Devious Bloodwitch"]="Mary Louise",["Arrogant Bloodwitch"]="Nora Hildegard",["Carefree Bloodwitch"]="Oscar",["Vengeful Bloodwitch"]="Malcolm",["Charismatic Wolf"]="Rafael Waithe",["Shy Wolf"]="Aiden",["Smart Wolf"]="Keelin Malraux",["Deceptive Wolf"]="Mason Lockwood",["Fearful Wolf"]="Finch Tarrayo",["Arrogant Wolf"]="Jules",["Confident Wolf"]="Jed",["Original Hybrid"]="Klaus Mikaelson",["Enzo St. John"]="Lorenzo Enzo St. John",["Klaus Mikaelson"]="Klaus Mikaelson",["Rebekah Mikaelson"]="Rebekah Mikaelson",["Elijah Mikaelson"]="Elijah Mikaelson",["Freya Mikaelson"]="Freya Mikaelson",["Hope Mikaelson"]="Hope Mikaelson",["Esther Mikaelson"]="Esther Mikaelson",["Marcel Gerard"]="Marcel Gerard",["Katherine Pierce"]="Katherine Pierce",["Stefan Salvatore"]="Stefan Salvatore",["Damon Salvatore"]="Damon Salvatore",["Caroline Forbes"]="Caroline Forbes",["Alexia Branson"]="Alexia Branson",["Bonnie Bennett"]="Bonnie Bennett",["Davina Claire"]="Davina Claire",["Cleo Sowande"]="Cleo Sowande",["Qetsiyah"]="Qetsiyah",["Malachi Kai Parker"]="Malachi Kai Parker",["Josie Saltzman"]="Josie Saltzman",["Lizzie Saltzman"]="Lizzie Saltzman",["Dark Josie"]="Dark Josie",["Silas"]="Silas",["Amara"]="Amara",["Landon Kirby"]="Landon Kirby",["Alaric Saltzman"]="Alaric Saltzman",["Jeremy Gilbert"]="Jeremy Gilbert",["Elena Gilbert"]="Elena Gilbert",["Matt Donovan"]="Matt Donovan",["Tyler Lockwood"]="Tyler Lockwood",["Hayley Marshall-Kenner"]="Hayley Marshall-Kenner",["Jackson Kenner"]="Jackson Kenner",["Valerie Tulle"]="Valerie Tulle",["Beau"]="Beau",["Dahlia"]="Dahlia",["Jules"]="Jules",["Rose"]="Rose",["Sage"]="Sage",["Jed"]="Jed",["Aiden"]="Aiden",["Mason Lockwood"]="Mason Lockwood",["Keelin Malraux"]="Keelin Malraux",["Rafael Waithe"]="Rafael Waithe",["Finch Tarrayo"]="Finch Tarrayo",["Milton MG Greasley"]="Milton MG Greasley",["Kaleb Hawkins"]="Kaleb Hawkins",["Lily Salvatore"]="Lily Salvatore",["Vicki Donovan"]="Vicki Donovan",["Joshua Josh Rosza"]="Joshua Josh Rosza",["Annabelle Zhu"]="Annabelle Zhu",["Pearl Zhu"]="Pearl Zhu",["Isobel Flemming"]="Isobel Flemming",["Lucien Castle"]="Lucien Castle",["Aya Al-Rashid"]="Aya Al-Rashid",["Aurora De Martel"]="Aurora De Martel",["Tristan De Martel"]="Tristan De Martel",["Sebastian The Merciless"]="Sebastian The Merciless",["Nadia Petrova"]="Nadia Petrova",["Roman"]="Roman",["Genevieve"]="Genevieve",["Bastianna Natale"]="Bastianna Natale",["Agnes"]="Agnes",["Josephine LaRue"]="Josephine LaRue",["Papa Tunde"]="Papa Tunde",["Vincent Griffith"]="Vincent Griffith",["Josette Jo Parker"]="Josette Jo Parker",["Olivia Parker"]="Olivia Parker",["Luke Parker"]="Luke Parker",["Alyssa Chang"]="Alyssa Chang",["Monique Deveraux"]="Monique Deveraux",["Sophie Deveraux"]="Sophie Deveraux",["Lucy Bennett"]="Lucy Bennett",["Sheila Bennett"]="Sheila Bennett",["Abby Bennett"]="Abby Bennett",["Celeste Dubois"]="Celeste Dubois",["Jonas Martin"]="Jonas Martin",["Luca Martin"]="Luca Martin",["Mary Louise"]="Mary Louise",["Nora Hildegard"]="Nora Hildegard",["Oscar"]="Oscar",["Malcolm"]="Malcolm",["Camille O'Connor"]="Camille O'Connor",["Jenna Sommers"]="Jenna Sommers",["Carol Lockwood"]="Carol Lockwood",["Liz Forbes"]="Liz Forbes",["Wade Rivers"]="Wade Rivers",["Mikael Mikaelson"]="Mikael Mikaelson",["Kol Mikaelson"]="Kol Mikaelson",["Finn Mikaelson"]="Finn Mikaelson",["Luna"]="Luna",["Marina"]="Marina",["Raven"]="Raven",["TheGrinch"]="TheGrinch",["TheDeer"]="TheDeer",["Elora"]="Elora",["Valeria"]="Valeria",["DataSigh"]="DataSigh",["Emchikuwu"]="Emchikuwu",["Kardashszn"]="Kardashszn",["Halohashira"]="Halohashira",["ChowLlama"]="ChowLlama",["AnimateWithRick"]="AnimateWithRick",["agussts_13"]="agussts_13",["HayleyMarshallKenner"]="HayleyMarshallKenner",["SebastianTheMerciless"]="SebastianTheMerciless",["MiltonMGGreasley"]="MiltonMGGreasley",["JoshuaJoshRosza"]="JoshuaJoshRosza",["LorenzoEnzoStJohn"]="LorenzoEnzoStJohn",["CamilleOConnor"]="CamilleOConnor",["MalachiKaiParker"]="MalachiKaiParker",["JosetteJoParker"]="JosetteJoParker",["PenelopePark"]="PenelopePark"}
 
--- ===== SPECIES DICTIONARY (ACTUALIZAT COMPLET) =====
+-- ===== SPECIES DICTIONARY =====
 local S = {
     Firstblood = "Original",
     Triblood = "Tribrid",
@@ -72,7 +72,6 @@ local S = {
     Tribrid = "Tribrid",
     Possessed = "Possessed"
 }
-
 
 -- ===== NOTIFICATION =====
 local function notify(message, title, duration)
@@ -214,7 +213,7 @@ settingsSection:Button("Unload", function()
     end})
 end)
 
--- ===== ITEM HELPER =====
+-- ===== ITEM HELPER (RE-ADAUGAT PENTRU CA BACKPACK ITEMS SĂ MERGĂ) =====
 local function GetItemsFromPlayer(plr)
     local items = {}
     local function check(obj)
@@ -239,30 +238,60 @@ local function UpdatePlayerCache()
     if not fd then return end
     local new = {}
     local newTextCache = {}
+    
     for _, t in pairs(fd:GetChildren()) do
         if t:IsA("BillboardGui") then
             local tx = {}
             for _, c in pairs(t:GetDescendants()) do
                 if c:IsA("TextLabel") and c.Text ~= "" then tx[#tx + 1] = c.Text end
             end
-            if #tx >= 3 and tx[3] ~= MY_NAME then
-                local plr = P:FindFirstChild(tx[3])
+            
+            if #tx >= 3 then
+                local rawSpecie = tx[1]
+                local charNameTag = tx[2]
+                local displayName = tx[3]
+                
+                local plr = P:FindFirstChild(displayName)
+                
+                -- Dacă nu găsim jucătorul după displayName, înseamnă că e Body Jumped
+                if not plr then
+                    for _, p in ipairs(P:GetPlayers()) do
+                        if p.Name ~= MY_NAME then
+                            local checkChar = p.Character
+                            if checkChar then
+                                local isJumped = false
+                                if p:GetAttribute("BodyJumped") then isJumped = true end
+                                if checkChar:FindFirstChild("BodyJumped") then isJumped = true end
+                                for _, child in pairs(checkChar:GetChildren()) do
+                                    if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then isJumped = true end
+                                end
+                                
+                                if isJumped then
+                                    plr = p
+                                    BodyJumpedCache[plr.Name] = true
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+                
                 if plr and plr ~= LP and plr.Name ~= MY_NAME then
+                    local cleanSpecie = rawSpecie:gsub("^%s*(.-)%s*$", "%1")
+                    local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
                     
-                    -- [REPARAȚIE] Eliminăm spațiile din numele speciei (ex: "Witch " devine "Witch")
-                    local rawSpecie = tx[1]:gsub("^%s*(.-)%s*$", "%1") 
+                    local nm = N[charNameTag] or charNameTag
+                    if sp == "Immortal" then nm = (charNameTag == "The Anchor" or charNameTag == "Amara") and "Amara" or "Silas" end
                     
-                    local sp = S[rawSpecie] or S[rawSpecie:lower()] or S[rawSpecie:upper()] or rawSpecie
+                    local isBodyJumped = BodyJumpedCache[plr.Name] or false
                     
-                    local nm = N[tx[2]] or tx[2]
-                    if nm == "Qetsiyah" or tx[2] == "Qetsiyah" or tx[2] == "Ancient Witch" then QetsiyahCache[plr.Name] = true else QetsiyahCache[plr.Name] = false end
+                    if isBodyJumped then
+                        -- FORȚĂM NUMELE SĂ FIE CEL REAL DIN DICȚIONARUL N
+                        nm = N[charNameTag] or charNameTag
+                        sp = "Witch" -- Asta asigură culoarea MOV
+                    end
                     
-                    local isBodyJumped = CheckIfBodyJumped(plr)
-                    if isBodyJumped then nm = "Esther Mikaelson"; sp = "Possessed"; BodyJumpedCache[plr.Name] = true else BodyJumpedCache[plr.Name] = false end
-                    
-                    if sp == "Immortal" then nm = (tx[2] == "The Anchor" or tx[2] == "Amara") and "Amara" or "Silas" end
-                    
-                    local color = nil
+                    local color = Color3_fromRGB(255, 255, 255)
                     if sp == "Vampire" then color = Color3_fromRGB(196, 30, 58)
                     elseif sp == "Werewolf" then color = Color3_fromRGB(249, 228, 103)
                     elseif sp == "Witch" then color = Color3_fromRGB(195, 145, 195)
@@ -282,17 +311,19 @@ local function UpdatePlayerCache()
                     elseif sp == "Triblood" then color = Color3_fromRGB(135, 206, 235)
                     elseif sp == "Bloodwitch" then color = Color3_fromRGB(188, 101, 169)
                     elseif sp == "Possessed" then color = Color3_fromRGB(255, 215, 0)
-                    else color = Color3_fromRGB(255, 255, 255) end
+                    end
                     
-                    new[tx[3]] = {sp = sp, nm = nm, color = color, player = plr}
+                    new[plr.Name] = {sp = sp, nm = nm, color = color, player = plr}
                     
                     local parts = {}
-                    if isBodyJumped then parts[#parts + 1] = "[Body Jumped] " .. nm
+                    if isBodyJumped then
+                        -- ACUM SCRIE DOAR [Body Jumped] Esther Mikaelson (sau Rebekah, Klaus etc.) fără "Bloodwitch"
+                        parts[#parts + 1] = "[Body Jumped] " .. nm
                     else
                         if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
                         if Options.ShowRealName then parts[#parts + 1] = nm end
                     end
-                    newTextCache[tx[3]] = table_concat(parts, " ")
+                    newTextCache[plr.Name] = table_concat(parts, " ")
                 end
             end
         end
@@ -324,6 +355,7 @@ end
 task_spawn(function()
     while true do task_wait(1) UpdatePlayerCache() UpdateIWOSCache() UpdateCureCache() end
 end)
+
 task_spawn(function()
     while true do
         task_wait(2)
@@ -344,6 +376,7 @@ task_spawn(function()
         end
     end
 end)
+
 task_spawn(function()
     while true do
         task_wait(5)
@@ -445,7 +478,8 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     if not lpRoot then for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end return end
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
-            -- PLAYER ESP (VERSIUNE REPARATĂ ȘI FOARTE RAPIDĂ)
+
+        -- PLAYER ESP (CU LOGICA PENTRU BODY JUMPED)
     if Options.EnablePlayerESP then
         local maxDistSq = Options.MaxDist * Options.MaxDist
         local showName  = Options.ShowPlayerName
@@ -469,12 +503,13 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 local px, py = screenPos.X, screenPos.Y
                                 local currentY = py
                                 
-                                -- VERIFICARE UȘOARĂ: Doar citim din cache (nu mai căutăm în Character)
+                                -- [LOGICA NOUA] Verificăm dacă e Body Jumped direct din cache
                                 if BodyJumpedCache[name] then
-                                    PushText("[Body Jumped] Esther Mikaelson", px, currentY, 16, COLOR_GOLD)
-                                    currentY = currentY + 18
+                                    -- Dacă e Body Jumped, forțăm textul și culoarea MOV
+                                    PushText("[Body Jumped] " .. data.nm, px, currentY, 14, Color3_fromRGB(195, 145, 195))
+                                    currentY = currentY + 16
                                 else
-                                    -- RECALCULĂM CULOAREA (UȘOR, DOAR IF-URI)
+                                    -- Logica normală pentru ceilalți jucători
                                     local sp = data.sp
                                     local color = Color3_fromRGB(255, 255, 255)
                                     
@@ -532,7 +567,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- TOOLS ESP (REPARAT PENTRU A NU DESENA DUPLICATE FIZICE)
+    -- TOOLS ESP
     if Options.EnableToolsESP then
         local toolsMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
         local lastIwosPos = nil 
