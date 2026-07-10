@@ -1,41 +1,4 @@
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
-local success, body = pcall(function()
-    return httpget("https://pastebin.com/raw/RnDJ6pfB")
-end)
-
-local isAllowed = false
-
-if success and body then
-    for id in body:gmatch("%d+") do
-        if tonumber(id) == player.UserId then
-            isAllowed = true
-            break
-        end
-    end
-end
-
-local embed = {{
-    title = isAllowed and "Executed" or "Not Whitelisted",
-    description = "**" .. player.Name .. "**\nID: `" .. player.UserId .. "`",
-    color = isAllowed and 65280 or 16711680
-}}
-
-pcall(function()
-    httppost("https://discord.com/api/webhooks/1524433789411917955/1YHOGmn5yszTfli5Y0xjXpgBXiYV9tWjbOIN9cfgXcKPvd1P_cDW7XREwEAOTQ9xPf7r", 
-    HttpService:JSONEncode({embeds = embed}))
-end)
-
-if not isAllowed then
-    error("nigger ur not whitelisted")
-    return
-end
-
-print("a nigger executed")
-
- -- Dav's Gui - The Vampire Legends Hub (FINAL FIXED VERSION - ALL COLORS + SAFE TOOLS)
+-- Dav's Gui - The Vampire Legends Hub (Matcha Version)
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
 
 local win = Lib:CreateWindow({
@@ -90,6 +53,60 @@ local function notify(message, title, duration)
     Lib:Notify(title or "Dav's Gui", message, duration or 5)
 end
 
+-- ===== FUNCTIE PENTRU A VERIFICA DACĂ ESTE BODY JUMPED =====
+local function CheckIfBodyJumped(plr)
+    if not plr then return false end
+    
+    local char = plr.Character
+    if char then
+        if plr:GetAttribute("BodyJumped") then
+            local jumpedBy = plr:GetAttribute("BodyJumpedBy")
+            if jumpedBy == "Esther Mikaelson" then
+                return true
+            end
+        end
+        
+        for _, child in pairs(char:GetChildren()) do
+            if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then
+                return true
+            end
+        end
+        
+        if char:FindFirstChild("BodyJumped") then
+            return true
+        end
+    end
+    return false
+end
+
+-- ===== FUNCTIE PENTRU A VERIFICA DACĂ JUCĂTORUL ESTE QETSIYAH =====
+local function IsQetsiyah(plr)
+    if not plr then return false end
+    
+    local charName = plr:GetAttribute("CharacterName")
+    if charName == "Qetsiyah" or charName == "Ancient Witch" then
+        return true
+    end
+    
+    local char = plr.Character
+    if char then
+        local head = char:FindFirstChild("Head")
+        if head then
+            for _, child in pairs(head:GetChildren()) do
+                if child:IsA("BillboardGui") then
+                    for _, label in pairs(child:GetDescendants()) do
+                        if label:IsA("TextLabel") and label.Text == "Qetsiyah" then
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return false
+end
+
 -- ===== CACHE SYSTEM =====
 local PlayerCache = {}
 local ItemCache = {}
@@ -97,7 +114,8 @@ local PlantCache = {}
 local IWOSCache = {}
 local CureData = nil
 local TextCache = {}
-
+local BodyJumpedCache = {}
+local QetsiyahCache = {}
 
 -- ===== UI SETUP =====
 local Visuals = win:Tab("Visuals", "eye")
@@ -112,23 +130,35 @@ local ToolsESP = Visuals:Section("Tools ESP", "Left")
 ToolsESP:Toggle("Enable IWOS ESP", Options.EnableToolsESP, function(on) Options.EnableToolsESP = on; notify("IWOS ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
 ToolsESP:Toggle("Enable Cure ESP", Options.EnableCureESP, function(on) Options.EnableCureESP = on; notify("Cure ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
 ToolsESP:Slider("Max Distance", Options.ToolsMaxDist, 500, 500, 10000, "s", function(v) Options.ToolsMaxDist = v end)
+
+-- BUTOANE CHECK IWOS SI CHECK CURE
 ToolsESP:Button("Check IWOS", function()
     if #IWOSCache > 0 then
         notify("IWOS found on map! (" .. #IWOSCache .. " total)", "IWOS Check", 3)
         local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         for _, rt in ipairs(IWOSCache) do
             if rt and rt.Position and lr then
-                notify("IWOS: " .. math_floor((rt.Position - lr.Position).Magnitude) .. "s", "IWOS Check", 5)
+                local dist = math_floor((rt.Position - lr.Position).Magnitude + 0.5)
+                notify("IWOS Distance: " .. dist .. "s", "IWOS Check", 5)
             end
         end
-    else notify("No IWOS found on map", "IWOS Check", 3) end
+    else
+        notify("No IWOS found on map", "IWOS Check", 3)
+    end
 end)
+
 ToolsESP:Button("Check Cure", function()
     if CureData then
         local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if lr then notify("Cure found! Distance: " .. math_floor((CureData - lr.Position).Magnitude) .. "s", "Cure Check", 5)
-        else notify("Cure found on map!", "Cure Check", 5) end
-    else notify("No Cure found on map", "Cure Check", 3) end
+        if lr then
+            local dist = math_floor((CureData - lr.Position).Magnitude + 0.5)
+            notify("Cure found! Distance: " .. dist .. "s", "Cure Check", 5)
+        else
+            notify("Cure found on map!", "Cure Check", 5)
+        end
+    else
+        notify("No Cure found on map", "Cure Check", 3)
+    end
 end)
 
 local ESPFeatures = Visuals:Section("ESP Features", "Right")
@@ -160,31 +190,12 @@ PlantTypes:Toggle("SanguiniaPlant", Options.ShowSanguinia, function(on) Options.
 PlantTypes:Toggle("PerenniaPlant", Options.ShowPerennia, function(on) Options.ShowPerennia = on end)
 
 local NotifSection = Notifiers:Section("Notifiers", "Left")
-NotifSection:Toggle("IWOS Notifier", Options.IWOSNotifier, function(on) Options.IWOSNotifier = on; notify("IWOS Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end, "Notifies when Indestructible White Oak Stake drops on the map")
-NotifSection:Toggle("Cure Notifier", Options.CureNotifier, function(on) Options.CureNotifier = on; notify("Cure Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end, "Notifies when Cure spawns on the map")
+NotifSection:Toggle("IWOS Notifier", Options.IWOSNotifier, function(on) Options.IWOSNotifier = on; notify("IWOS Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
+NotifSection:Toggle("Cure Notifier", Options.CureNotifier, function(on) Options.CureNotifier = on; notify("Cure Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
 NotifSection:Slider("Notification Duration", Options.NotifDuration, 1, 1, 15, "s", function(v) Options.NotifDuration = v end)
 
 local StaffSection = Notifiers:Section("Staff Notifier", "Left")
-StaffSection:Toggle("Staff Notifier", Options.StaffNotifier, function(on) Options.StaffNotifier = on; notify("Staff Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end, "Notifies when staff members join the game")
-StaffSection:Button("Check Staff", function()
-    local foundAny = false
-    for _, player in ipairs(P:GetPlayers()) do
-        if player ~= LP then
-            local success, result = pcall(function() return game:GetService("GroupService"):GetGroupsAsync(player.UserId) end)
-            if success and result then
-                for _, group in ipairs(result) do
-                    if group.Id == 3487972 then
-                        local roleName = group.Role or ""
-                        if roleName == "Developer" or roleName == "Owner" or roleName == "Admin" or roleName == "Moderator" or roleName == "Helper" then
-                            foundAny = true; notify(player.Name .. " - " .. roleName, "Staff Found", Options.NotifDuration); break
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if not foundAny then notify("No staff members found", "Staff Scan", Options.NotifDuration) end
-end)
+StaffSection:Toggle("Staff Notifier", Options.StaffNotifier, function(on) Options.StaffNotifier = on; notify("Staff Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
 
 local settingsSection = win:SettingsSection("Menu", "Left")
 settingsSection:Button("Unload", function()
@@ -200,8 +211,12 @@ local function GetItemsFromPlayer(plr)
     local function check(obj)
         if not obj then return end
         local n = obj.Name
-        if n == "TheCure" then items[#items + 1] = "Cure"
-        elseif n == "QetsiyahCure" then items[#items + 1] = "QetCure"
+        if n == "TheCure" then 
+            items[#items + 1] = "Cure"
+        elseif n == "QetsiyahCure" then 
+            if IsQetsiyah(plr) then
+                items[#items + 1] = "QetCure"
+            end
         elseif n:find("RedOak") then items[#items + 1] = "RedOak"
         elseif n:find("WhiteOak") and not n:find("Indestructible") then items[#items + 1] = "WhiteOak"
         elseif n:find("Indestructible") then items[#items + 1] = "IWOS" end
@@ -214,7 +229,6 @@ local function GetItemsFromPlayer(plr)
 end
 
 -- ===== CACHE UPDATE FUNCTIONS =====
-
 local function UpdatePlayerCache()
     local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
@@ -235,6 +249,24 @@ local function UpdatePlayerCache()
                     local rawSpecie = tx[1]
                     local sp = S[rawSpecie] or rawSpecie
                     local nm = N[tx[2]] or tx[2]
+                    
+                    -- Verifică dacă este Qetsiyah
+                    if nm == "Qetsiyah" or tx[2] == "Qetsiyah" or tx[2] == "Ancient Witch" then
+                        QetsiyahCache[plr.Name] = true
+                    else
+                        QetsiyahCache[plr.Name] = false
+                    end
+                    
+                    -- VERIFICĂ DACĂ ESTE BODY JUMPED
+                    local isBodyJumped = CheckIfBodyJumped(plr)
+                    if isBodyJumped then
+                        nm = "Esther Mikaelson"
+                        sp = "Possessed"
+                        BodyJumpedCache[plr.Name] = true
+                    else
+                        BodyJumpedCache[plr.Name] = false
+                    end
+                    
                     if sp == "Immortal" then nm = (tx[2] == "The Anchor" or tx[2] == "Amara") and "Amara" or "Silas" end
                     
                     local color = nil
@@ -256,13 +288,19 @@ local function UpdatePlayerCache()
                     elseif sp == "Firstblood" then color = Color3_fromRGB(178, 58, 64)
                     elseif sp == "Triblood" then color = Color3_fromRGB(135, 206, 235)
                     elseif sp == "Bloodwitch" then color = Color3_fromRGB(188, 101, 169)
+                    elseif sp == "Possessed" then color = Color3_fromRGB(255, 215, 0)
                     else color = Color3_fromRGB(255, 255, 255) end
                     
                     new[tx[3]] = {sp = sp, nm = nm, color = color, player = plr}
                     
                     local parts = {}
-                    if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
-                    if Options.ShowRealName then parts[#parts + 1] = nm end
+                    -- Dacă este body jumped, afișează mereu [Body Jumped] fără a depinde de ShowSpecies
+                    if isBodyJumped then
+                        parts[#parts + 1] = "[Body Jumped] " .. nm
+                    else
+                        if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
+                        if Options.ShowRealName then parts[#parts + 1] = nm end
+                    end
                     newTextCache[tx[3]] = table.concat(parts, " ")
                 end
             end
@@ -396,6 +434,7 @@ local COLOR_GRAY = Color3_fromRGB(180, 180, 180)
 local COLOR_OFFWHITE = Color3_fromRGB(200, 200, 200)
 local COLOR_RED = Color3_fromRGB(255, 0, 0)
 local COLOR_GREEN = Color3_fromRGB(0, 255, 100)
+local COLOR_GOLD = Color3_fromRGB(255, 215, 0)
 
 local PLANT_NAMES = {"WolfsbanePlant", "VampitePlant", "SeniaPlant", "MooncapPlant", "NightshadePlant", "AerpinePlant", "YarrowPlant", "ArcanithPlant", "DerridaPlant", "SanguiniaPlant", "PerenniaPlant"}
 local PLANT_COLORS = {
@@ -432,102 +471,74 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
     
-local PlayerCache = PlayerCache or {}
-local TextCache = TextCache or {}
-local ItemCache = ItemCache or {}
-local Options = Options or {}
-
-local lastCacheUpdate = lastCacheUpdate or 0
-
--- 1. CACHE INITIALIZATION
-local PlayerCache = PlayerCache or {}
-local TextCache = TextCache or {}
-local ItemCache = ItemCache or {}
-local Options = Options or {}
-
-local lastCacheUpdate = lastCacheUpdate or 0
-local currentTick = tick()
-
-if currentTick - lastCacheUpdate > 0.1 then
-    lastCacheUpdate = currentTick
-    for name, data in pairs(PlayerCache) do
-        local char = data.player and data.player.Character
-        if char then
-            local head = char:FindFirstChild("Head")
-            data.cachedPos = head and head.Position
-            data.hasHead = head and true or false
-        else
-            data.hasHead = false
-        end
-    end
-end
-
--- 2. RENDERING
-if Options.EnablePlayerESP then
-    local maxDistSq = Options.MaxDist * Options.MaxDist
-    local showName  = Options.ShowPlayerName
-    local showDist  = Options.ShowDistance
-    local showItems = Options.ShowItems
-
-    -- Localize once
-    local w2s = WorldToScreen
-    local p_text = PushText
-    local m_floor = math.floor
-    local m_sqrt  = math.sqrt
-    local t_concat = table.concat
-    local to_str = tostring
-
-    for name, data in pairs(PlayerCache) do
-        if data.hasHead then
-            local pos = data.cachedPos
-            local dx = pos.X - lpx
-            local dy = pos.Y - lpy
-            local dz = pos.Z - lpz
-            local distSq = dx*dx + dy*dy + dz*dz   -- ✅ was missing!
-
-            if distSq <= maxDistSq then
-                local screenPos, onScreen = w2s(pos)
-
-                if onScreen then
-                    local px, py = screenPos.X, screenPos.Y
-                    local currentY = py
-
-                    -- Custom cached text (e.g. tagged name)
-                    local cachedText = TextCache[name]
-                    if cachedText then
-                        p_text(cachedText, px, currentY, 14, data.color)
-                        currentY = currentY + 14
-                    end
-
-                    -- Sequential renders — no combinatorial branching
-                    if showName then
-                        p_text(name, px, currentY, 14, COLOR_GRAY)
-                        currentY = currentY + 14
-                    end
-
-                    if showDist then
-                        local dist = m_floor(m_sqrt(distSq) + 0.5)
-                        p_text("[" .. to_str(dist) .. "]", px, currentY, 12, COLOR_GRAY)
-                        currentY = currentY + 12
-                    end
-
-                    if showItems then
-                        local items = ItemCache[name]
-                        if items then
-                            p_text(t_concat(items, " "), px, currentY, 11, COLOR_GRAY)
+    -- PLAYER ESP
+    if Options.EnablePlayerESP then
+        local maxDistSq = Options.MaxDist * Options.MaxDist
+        local showName  = Options.ShowPlayerName
+        local showDist  = Options.ShowDistance
+        local showItems = Options.ShowItems
+        
+        for name, data in pairs(PlayerCache) do
+            local plr = data.player
+            if plr then
+                local char = plr.Character
+                if char then
+                    local head = char:FindFirstChild("Head")
+                    if head then
+                        local pos = head.Position
+                        local dx = pos.X - lpx
+                        local dy = pos.Y - lpy
+                        local dz = pos.Z - lpz
+                        local distSq = dx*dx + dy*dy + dz*dz
+                        
+                        if distSq <= maxDistSq then
+                            local screenPos, onScreen = WorldToScreen(pos)
+                            
+                            if onScreen then
+                                local px, py = screenPos.X, screenPos.Y
+                                local currentY = py
+                                
+                                -- Dacă este body jumped, afișează [Body Jumped] Esther Mikaelson cu auriu
+                                if BodyJumpedCache[name] then
+                                    PushText("[Body Jumped] Esther Mikaelson", px, currentY, 16, COLOR_GOLD)
+                                    currentY = currentY + 18
+                                else
+                                    -- Text normal
+                                    local cachedText = TextCache[name]
+                                    if cachedText then
+                                        PushText(cachedText, px, currentY, 14, data.color)
+                                        currentY = currentY + 16
+                                    end
+                                end
+                                
+                                if showName then
+                                    PushText(name, px, currentY, 14, COLOR_GRAY)
+                                    currentY = currentY + 16
+                                end
+                                
+                                if showDist then
+                                    local dist = math_floor(math.sqrt(distSq) + 0.5)
+                                    PushText("[" .. tostring(dist) .. "]", px, currentY, 12, COLOR_GRAY)
+                                    currentY = currentY + 14
+                                end
+                                
+                                if showItems then
+                                    local items = ItemCache[name]
+                                    if items and #items > 0 then
+                                        PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY)
+                                    end
+                                end
+                            end
                         end
                     end
                 end
             end
         end
     end
-end
-
-  
-    -- TOOLS ESP (FIXED - CHECK rt AND rt.Position)
+    
+    -- TOOLS ESP
     if Options.EnableToolsESP then
-        local toolsMaxDist = Options.ToolsMaxDist
-        local toolsMaxDistSq = toolsMaxDist * toolsMaxDist
+        local toolsMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
         
         for i = 1, #IWOSCache do
             local rt = IWOSCache[i]
@@ -547,7 +558,7 @@ end
         end
     end
     
-    -- CURE ESP (FIXED - CHECK CureData.X)
+    -- CURE ESP
     if Options.EnableCureESP and CureData and CureData.X then
         local cx, cy, cz = CureData.X, CureData.Y, CureData.Z
         local dx, dy, dz = cx - lpx, cy - lpy, cz - lpz
@@ -564,8 +575,7 @@ end
     
     -- PLANT ESP
     if Options.EnablePlantESP then
-        local plantMaxDist = Options.PlantMaxDist
-        local plantMaxDistSq = plantMaxDist * plantMaxDist
+        local plantMaxDistSq = Options.PlantMaxDist * Options.PlantMaxDist
         local showPlantName = Options.ShowPlantName
         local showPlantDist = Options.ShowPlantDist
         
