@@ -78,7 +78,7 @@ local function notify(message, title, duration)
     Lib:Notify(title or "Dav's Gui", message, duration or 5)
 end
 
--- ===== FUNCTIE PENTRU A VERIFICA DACĂ ESTE BODY JUMPED =====
+-- ===== FUNCTIE PENTRU A VERIFICA DACÄ‚ ESTE BODY JUMPED =====
 local function CheckIfBodyJumped(plr)
     if not plr then return false end
     local char = plr.Character
@@ -95,7 +95,7 @@ local function CheckIfBodyJumped(plr)
     return false
 end
 
--- ===== FUNCTIE PENTRU A VERIFICA DACĂ JUCĂTORUL ESTE QETSIYAH =====
+-- ===== FUNCTIE PENTRU A VERIFICA DACÄ‚ JUCÄ‚TORUL ESTE QETSIYAH =====
 local function IsQetsiyah(plr)
     if not plr then return false end
     local charName = plr:GetAttribute("CharacterName")
@@ -120,7 +120,7 @@ end
 local PlayerCache = {}
 local ItemCache = {}
 local PlantCache = {}
-local IWOSCache = {}
+local IWOSCache = {} -- Will store {position, source, playerName}
 local CureData = nil
 local TextCache = {}
 local BodyJumpedCache = {}
@@ -213,7 +213,7 @@ settingsSection:Button("Unload", function()
     end})
 end)
 
--- ===== ITEM HELPER (RE-ADAUGAT PENTRU CA BACKPACK ITEMS SĂ MERGĂ) =====
+-- ===== ITEM HELPER (RE-ADAUGAT PENTRU CA BACKPACK ITEMS SÄ‚ MERGÄ‚) =====
 local function GetItemsFromPlayer(plr)
     local items = {}
     local function check(obj)
@@ -253,7 +253,7 @@ local function UpdatePlayerCache()
                 
                 local plr = P:FindFirstChild(displayName)
                 
-                -- Dacă nu găsim jucătorul după displayName, înseamnă că e Body Jumped
+                -- DacÄƒ nu gÄƒsim jucÄƒtorul dupÄƒ displayName, Ã®nseamnÄƒ cÄƒ e Body Jumped
                 if not plr then
                     for _, p in ipairs(P:GetPlayers()) do
                         if p.Name ~= MY_NAME then
@@ -286,9 +286,9 @@ local function UpdatePlayerCache()
                     local isBodyJumped = BodyJumpedCache[plr.Name] or false
                     
                     if isBodyJumped then
-                        -- FORȚĂM NUMELE SĂ FIE CEL REAL DIN DICȚIONARUL N
+                        -- FORÈšÄ‚M NUMELE SÄ‚ FIE CEL REAL DIN DICÈšIONARUL N
                         nm = N[charNameTag] or charNameTag
-                        sp = "Witch" -- Asta asigură culoarea MOV
+                        sp = "Witch" -- Asta asigurÄƒ culoarea MOV
                     end
                     
                     local color = Color3_fromRGB(255, 255, 255)
@@ -317,7 +317,7 @@ local function UpdatePlayerCache()
                     
                     local parts = {}
                     if isBodyJumped then
-                        -- ACUM SCRIE DOAR [Body Jumped] Esther Mikaelson (sau Rebekah, Klaus etc.) fără "Bloodwitch"
+                        -- ACUM SCRIE DOAR [Body Jumped] Esther Mikaelson (sau Rebekah, Klaus etc.) fÄƒrÄƒ "Bloodwitch"
                         parts[#parts + 1] = "[Body Jumped] " .. nm
                     else
                         if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
@@ -404,7 +404,7 @@ task_spawn(function()
 end)
 
 -- ===== ULTRA FAST RENDER SYSTEM =====
-local MAX_DRAWINGS = 200
+local MAX_DRAWINGS = 300
 local DrawPool = {}
 local DrawVisible = {}
 local DrawText = {}
@@ -503,13 +503,13 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 local px, py = screenPos.X, screenPos.Y
                                 local currentY = py
                                 
-                                -- [LOGICA NOUA] Verificăm dacă e Body Jumped direct din cache
+                                -- [LOGICA NOUA] VerificÄƒm dacÄƒ e Body Jumped direct din cache
                                 if BodyJumpedCache[name] then
-                                    -- Dacă e Body Jumped, forțăm textul și culoarea MOV
+                                    -- DacÄƒ e Body Jumped, forÈ›Äƒm textul È™i culoarea MOV
                                     PushText("[Body Jumped] " .. data.nm, px, currentY, 14, Color3_fromRGB(195, 145, 195))
                                     currentY = currentY + 16
                                 else
-                                    -- Logica normală pentru ceilalți jucători
+                                    -- Logica normalÄƒ pentru ceilalÈ›i jucÄƒtori
                                     local sp = data.sp
                                     local color = Color3_fromRGB(255, 255, 255)
                                     
