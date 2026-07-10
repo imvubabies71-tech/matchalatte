@@ -445,7 +445,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     if not lpRoot then for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end return end
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
-        -- PLAYER ESP (REPARAT PENTRU BODY JUMPED SI CULORI)
+            -- PLAYER ESP (VERSIUNE REPARATĂ ȘI FOARTE RAPIDĂ)
     if Options.EnablePlayerESP then
         local maxDistSq = Options.MaxDist * Options.MaxDist
         local showName  = Options.ShowPlayerName
@@ -457,61 +457,6 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
             if plr then
                 local char = plr.Character
                 if char then
-                    -- VERIFICARE DIRECTĂ PENTRU BODY JUMPED (ESTHER)
-                    local isBodyJumped = false
-                    if plr:GetAttribute("BodyJumped") then
-                        local jumpedBy = plr:GetAttribute("BodyJumpedBy")
-                        if jumpedBy == "Esther Mikaelson" then isBodyJumped = true end
-                    end
-                    if not isBodyJumped then
-                        for _, child in pairs(char:GetChildren()) do
-                            if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then isBodyJumped = true break end
-                        end
-                    end
-                    if not isBodyJumped and char:FindFirstChild("BodyJumped") then isBodyJumped = true end
-                    
-                    -- Dacă e Body Jumped, forțăm textul și culoarea, indiferent de cache
-                    if isBodyJumped then
-                        local head = char:FindFirstChild("Head")
-                        if head then
-                            local pos = head.Position
-                            local dx = pos.X - lpx; local dy = pos.Y - lpy; local dz = pos.Z - lpz
-                            local distSq = dx*dx + dy*dy + dz*dz
-                            
-                            if distSq <= maxDistSq then
-                                local screenPos, onScreen = WorldToScreen(pos)
-                                if onScreen then
-                                    local px, py = screenPos.X, screenPos.Y
-                                    local currentY = py
-                                    
-                                    -- Afișăm direct textul [Body Jumped] cu auriu
-                                    PushText("[Body Jumped] Esther Mikaelson", px, currentY, 16, COLOR_GOLD)
-                                    currentY = currentY + 18
-                                    
-                                    if showName then
-                                        PushText(name, px, currentY, 14, COLOR_GRAY)
-                                        currentY = currentY + 16
-                                    end
-                                    
-                                    if showDist then
-                                        local dist = math_floor(math.sqrt(distSq) + 0.5)
-                                        PushText("[" .. tostring(dist) .. "]", px, currentY, 12, COLOR_GRAY)
-                                        currentY = currentY + 14
-                                    end
-                                    
-                                    if showItems then
-                                        local items = ItemCache[name]
-                                        if items and #items > 0 then PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY) end
-                                    end
-                                end
-                            end
-                        end
-                        continue -- Sărim peste restul buclei pentru acest jucător, deoarece am desenat deja textul special
-                    end
-
-                    -- ---------------------------------------------------------
-                    -- LOGICA NORMALĂ (dacă NU este Body Jumped) începe aici
-                    -- ---------------------------------------------------------
                     local head = char:FindFirstChild("Head")
                     if head then
                         local pos = head.Position
@@ -524,35 +469,41 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 local px, py = screenPos.X, screenPos.Y
                                 local currentY = py
                                 
-                                -- RECALCULĂM CULOAREA AICI, ÎN TIMPUL RANDĂRII
-                                local sp = data.sp -- Specia (ex: Witch, Vampire) o luăm direct din data
-                                local color = Color3_fromRGB(255, 255, 255) -- Implicit Alb
-                                
-                                if sp == "Vampire" then color = Color3_fromRGB(196, 30, 58)
-                                elseif sp == "Werewolf" then color = Color3_fromRGB(249, 228, 103)
-                                elseif sp == "Witch" then color = Color3_fromRGB(195, 145, 195)
-                                elseif sp == "Original" then color = Color3_fromRGB(154, 42, 42)
-                                elseif sp == "Hybrid" then color = Color3_fromRGB(245, 185, 102)
-                                elseif sp == "Heretic" then color = Color3_fromRGB(188, 101, 169)
-                                elseif sp == "Mortal" then color = Color3_fromRGB(193, 225, 193)
-                                elseif sp == "Phoenix" then color = Color3_fromRGB(223, 129, 96)
-                                elseif sp == "Hunter" then color = Color3_fromRGB(120, 199, 114)
-                                elseif sp == "Tribrid" then color = Color3_fromRGB(182, 208, 226)
-                                elseif sp == "Immortal" then color = Color3_fromRGB(126, 53, 248)
-                                elseif sp == "Siphoner" then color = Color3_fromRGB(114, 147, 202)
-                                elseif sp == "Muse" then color = Color3_fromRGB(254, 194, 14)
-                                elseif sp == "Fairy" then color = Color3_fromRGB(254, 194, 14)
-                                elseif sp == "Werewitch" then color = Color3_fromRGB(201, 69, 150)
-                                elseif sp == "Firstblood" then color = Color3_fromRGB(178, 58, 64)
-                                elseif sp == "Triblood" then color = Color3_fromRGB(135, 206, 235)
-                                elseif sp == "Bloodwitch" then color = Color3_fromRGB(188, 101, 169)
-                                elseif sp == "Possessed" then color = Color3_fromRGB(255, 215, 0)
-                                end
-                                
-                                local cachedText = TextCache[name]
-                                if cachedText then 
-                                    PushText(cachedText, px, currentY, 14, color) 
-                                    currentY = currentY + 16 
+                                -- VERIFICARE UȘOARĂ: Doar citim din cache (nu mai căutăm în Character)
+                                if BodyJumpedCache[name] then
+                                    PushText("[Body Jumped] Esther Mikaelson", px, currentY, 16, COLOR_GOLD)
+                                    currentY = currentY + 18
+                                else
+                                    -- RECALCULĂM CULOAREA (UȘOR, DOAR IF-URI)
+                                    local sp = data.sp
+                                    local color = Color3_fromRGB(255, 255, 255)
+                                    
+                                    if sp == "Vampire" then color = Color3_fromRGB(196, 30, 58)
+                                    elseif sp == "Werewolf" then color = Color3_fromRGB(249, 228, 103)
+                                    elseif sp == "Witch" then color = Color3_fromRGB(195, 145, 195)
+                                    elseif sp == "Original" then color = Color3_fromRGB(154, 42, 42)
+                                    elseif sp == "Hybrid" then color = Color3_fromRGB(245, 185, 102)
+                                    elseif sp == "Heretic" then color = Color3_fromRGB(188, 101, 169)
+                                    elseif sp == "Mortal" then color = Color3_fromRGB(193, 225, 193)
+                                    elseif sp == "Phoenix" then color = Color3_fromRGB(223, 129, 96)
+                                    elseif sp == "Hunter" then color = Color3_fromRGB(120, 199, 114)
+                                    elseif sp == "Tribrid" then color = Color3_fromRGB(182, 208, 226)
+                                    elseif sp == "Immortal" then color = Color3_fromRGB(126, 53, 248)
+                                    elseif sp == "Siphoner" then color = Color3_fromRGB(114, 147, 202)
+                                    elseif sp == "Muse" then color = Color3_fromRGB(254, 194, 14)
+                                    elseif sp == "Fairy" then color = Color3_fromRGB(254, 194, 14)
+                                    elseif sp == "Werewitch" then color = Color3_fromRGB(201, 69, 150)
+                                    elseif sp == "Firstblood" then color = Color3_fromRGB(178, 58, 64)
+                                    elseif sp == "Triblood" then color = Color3_fromRGB(135, 206, 235)
+                                    elseif sp == "Bloodwitch" then color = Color3_fromRGB(188, 101, 169)
+                                    elseif sp == "Possessed" then color = Color3_fromRGB(255, 215, 0)
+                                    end
+                                    
+                                    local cachedText = TextCache[name]
+                                    if cachedText then 
+                                        PushText(cachedText, px, currentY, 14, color) 
+                                        currentY = currentY + 16 
+                                    end
                                 end
                                 
                                 if showName then
