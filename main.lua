@@ -46,7 +46,33 @@ local Options = {
 
 -- ===== DICTIONARIES =====
 local N = {["The Hybrid"]="Klaus Mikaelson",["Loyal Sister"]="Rebekah Mikaelson",["Noble Brother"]="Elijah Mikaelson",["Lost Sister"]="Freya Mikaelson",["sis"]="Freya Mikaelson",["The Miracle"]="Hope Mikaelson",["The Imposter"]="Katherine Pierce",["The Ripper"]="Stefan Salvatore",["The Sarcastic"]="Damon Salvatore",["Town Witch"]="Bonnie Bennett",["Attic Witch"]="Davina Claire",["The Muse"]="Cleo Sowande",["Ancient Witch"]="Qetsiyah",["The King"]="Marcel Gerard",["The Trickster"]="Silas",["The Phoenix"]="Landon Kirby",["The Headmaster"]="Alaric Saltzman",["The Hunter"]="Jeremy Gilbert",["The Mentor"]="Alexia Branson",["The Control Freak"]="Caroline Forbes",["Original Witch"]="Esther Mikaelson",["The Sociopath"]="Malachi Kai Parker",["The Doppelganger"]="Elena Gilbert",["Alpha Wolf"]="Jackson Kenner",["Quarterback"]="Tyler Lockwood",["Crescent Queen"]="Hayley Marshall-Kenner",["First Bloodwitch"]="Valerie Tulle",["The Anchor"]="Amara",["The Friend"]="Matt Donovan",["The Therapist"]="Camille O'Connor",["The Sheriff"]="Liz Forbes",["The Guardian"]="Jenna Sommers",["The Mayor"]="Carol Lockwood",["The Fairy"]="Wade Rivers",["Silent Bloodwitch"]="Beau",["The Nerd"]="Milton MG Greasley",["The Dragon"]="Kaleb Hawkins",["The Charmer"]="Damon Salvatore",["Siphoner Witch"]="Josie Saltzman",["Siphoner Twin"]="Lizzie Saltzman",["Dark Siphoner"]="Dark Josie",["Viking Warrior"]="Mikael Mikaelson",["Deranged Brother"]="Kol Mikaelson",["Outcast Brother"]="Finn Mikaelson",["The Lover"]="Sage",["The Selfish"]="Isobel Flemming",["Troubled Girl"]="Vicki Donovan",["The Loyal"]="Joshua Josh Rosza",["The Runaway"]="Rose",["The Fierce Protector"]="Pearl Zhu",["Adoptive Mother"]="Lily Salvatore",["The Rebellious"]="Annabelle Zhu",["The Traveler"]="Nadia Petrova",["The Firstborn"]="Lucien Castle",["The Assassin"]="Aya Al-Rashid",["The Unhinged"]="Aurora De Martel",["The Leader"]="Tristan De Martel",["The Merciless"]="Sebastian The Merciless",["The Obsessed"]="Roman",["Coven Ancestor"]="Genevieve",["Ritual Leader"]="Bastianna Natale",["Fortune Teller"]="Agnes",["Regent"]="Josephine LaRue",["Voodoo King"]="Papa Tunde",["Ancestral Guardian"]="Vincent Griffith",["The Doctor"]="Josette Jo Parker",["Lost Twin"]="Olivia Parker",["Protective Twin"]="Luke Parker",["Popular Girl"]="Alyssa Chang",["The Sacrifice"]="Monique Deveraux",["Quarter Witch"]="Sophie Deveraux",["Cousin"]="Lucy Bennett",["Grandmother"]="Sheila Bennett",["Absent Mother"]="Abby Bennett",["Vengeful Spirit"]="Celeste Dubois",["Manipulative Father"]="Jonas Martin",["The Pawn"]="Luca Martin",["Devious Bloodwitch"]="Mary Louise",["Arrogant Bloodwitch"]="Nora Hildegard",["Carefree Bloodwitch"]="Oscar",["Vengeful Bloodwitch"]="Malcolm",["Charismatic Wolf"]="Rafael Waithe",["Shy Wolf"]="Aiden",["Smart Wolf"]="Keelin Malraux",["Deceptive Wolf"]="Mason Lockwood",["Fearful Wolf"]="Finch Tarrayo",["Arrogant Wolf"]="Jules",["Confident Wolf"]="Jed",["Original Hybrid"]="Klaus Mikaelson",["Enzo St. John"]="Lorenzo Enzo St. John",["Klaus Mikaelson"]="Klaus Mikaelson",["Rebekah Mikaelson"]="Rebekah Mikaelson",["Elijah Mikaelson"]="Elijah Mikaelson",["Freya Mikaelson"]="Freya Mikaelson",["Hope Mikaelson"]="Hope Mikaelson",["Esther Mikaelson"]="Esther Mikaelson",["Marcel Gerard"]="Marcel Gerard",["Katherine Pierce"]="Katherine Pierce",["Stefan Salvatore"]="Stefan Salvatore",["Damon Salvatore"]="Damon Salvatore",["Caroline Forbes"]="Caroline Forbes",["Alexia Branson"]="Alexia Branson",["Bonnie Bennett"]="Bonnie Bennett",["Davina Claire"]="Davina Claire",["Cleo Sowande"]="Cleo Sowande",["Qetsiyah"]="Qetsiyah",["Malachi Kai Parker"]="Malachi Kai Parker",["Josie Saltzman"]="Josie Saltzman",["Lizzie Saltzman"]="Lizzie Saltzman",["Dark Josie"]="Dark Josie",["Silas"]="Silas",["Amara"]="Amara",["Landon Kirby"]="Landon Kirby",["Alaric Saltzman"]="Alaric Saltzman",["Jeremy Gilbert"]="Jeremy Gilbert",["Elena Gilbert"]="Elena Gilbert",["Matt Donovan"]="Matt Donovan",["Tyler Lockwood"]="Tyler Lockwood",["Hayley Marshall-Kenner"]="Hayley Marshall-Kenner",["Jackson Kenner"]="Jackson Kenner",["Valerie Tulle"]="Valerie Tulle",["Beau"]="Beau",["Dahlia"]="Dahlia",["Jules"]="Jules",["Rose"]="Rose",["Sage"]="Sage",["Jed"]="Jed",["Aiden"]="Aiden",["Mason Lockwood"]="Mason Lockwood",["Keelin Malraux"]="Keelin Malraux",["Rafael Waithe"]="Rafael Waithe",["Finch Tarrayo"]="Finch Tarrayo",["Milton MG Greasley"]="Milton MG Greasley",["Kaleb Hawkins"]="Kaleb Hawkins",["Lily Salvatore"]="Lily Salvatore",["Vicki Donovan"]="Vicki Donovan",["Joshua Josh Rosza"]="Joshua Josh Rosza",["Annabelle Zhu"]="Annabelle Zhu",["Pearl Zhu"]="Pearl Zhu",["Isobel Flemming"]="Isobel Flemming",["Lucien Castle"]="Lucien Castle",["Aya Al-Rashid"]="Aya Al-Rashid",["Aurora De Martel"]="Aurora De Martel",["Tristan De Martel"]="Tristan De Martel",["Sebastian The Merciless"]="Sebastian The Merciless",["Nadia Petrova"]="Nadia Petrova",["Roman"]="Roman",["Genevieve"]="Genevieve",["Bastianna Natale"]="Bastianna Natale",["Agnes"]="Agnes",["Josephine LaRue"]="Josephine LaRue",["Papa Tunde"]="Papa Tunde",["Vincent Griffith"]="Vincent Griffith",["Josette Jo Parker"]="Josette Jo Parker",["Olivia Parker"]="Olivia Parker",["Luke Parker"]="Luke Parker",["Alyssa Chang"]="Alyssa Chang",["Monique Deveraux"]="Monique Deveraux",["Sophie Deveraux"]="Sophie Deveraux",["Lucy Bennett"]="Lucy Bennett",["Sheila Bennett"]="Sheila Bennett",["Abby Bennett"]="Abby Bennett",["Celeste Dubois"]="Celeste Dubois",["Jonas Martin"]="Jonas Martin",["Luca Martin"]="Luca Martin",["Mary Louise"]="Mary Louise",["Nora Hildegard"]="Nora Hildegard",["Oscar"]="Oscar",["Malcolm"]="Malcolm",["Camille O'Connor"]="Camille O'Connor",["Jenna Sommers"]="Jenna Sommers",["Carol Lockwood"]="Carol Lockwood",["Liz Forbes"]="Liz Forbes",["Wade Rivers"]="Wade Rivers",["Mikael Mikaelson"]="Mikael Mikaelson",["Kol Mikaelson"]="Kol Mikaelson",["Finn Mikaelson"]="Finn Mikaelson",["Luna"]="Luna",["Marina"]="Marina",["Raven"]="Raven",["TheGrinch"]="TheGrinch",["TheDeer"]="TheDeer",["Elora"]="Elora",["Valeria"]="Valeria",["DataSigh"]="DataSigh",["Emchikuwu"]="Emchikuwu",["Kardashszn"]="Kardashszn",["Halohashira"]="Halohashira",["ChowLlama"]="ChowLlama",["AnimateWithRick"]="AnimateWithRick",["agussts_13"]="agussts_13",["HayleyMarshallKenner"]="HayleyMarshallKenner",["SebastianTheMerciless"]="SebastianTheMerciless",["MiltonMGGreasley"]="MiltonMGGreasley",["JoshuaJoshRosza"]="JoshuaJoshRosza",["LorenzoEnzoStJohn"]="LorenzoEnzoStJohn",["CamilleOConnor"]="CamilleOConnor",["MalachiKaiParker"]="MalachiKaiParker",["JosetteJoParker"]="JosetteJoParker",["PenelopePark"]="PenelopePark"}
-local S = {Firstblood="Original",Triblood="Tribrid",Bloodwitch="Heretic",Heretic="Heretic",Vampire="Vampire",Werewolf="Werewolf",Witch="Witch",Hybrid="Hybrid",Mortal="Mortal",Hunter="Hunter",Phoenix="Phoenix",Immortal="Immortal",Siphoner="Siphoner",Muse="Muse",Fairy="Fairy",Werewitch="Werewitch"}
+
+-- ===== SPECIES DICTIONARY (ACTUALIZAT COMPLET) =====
+local S = {
+    Firstblood = "Original",
+    Triblood = "Tribrid",
+    Bloodwitch = "Heretic",
+    Heretic = "Heretic",
+    Vampire = "Vampire",
+    Werewolf = "Werewolf",
+    Witch = "Witch",
+    ["Ancestor-Witch"] = "Witch",
+    ["AncestorWitch"] = "Witch",
+    ["Ancestor Witch"] = "Witch",
+    Hybrid = "Hybrid",
+    Mortal = "Mortal",
+    Hunter = "Hunter",
+    Phoenix = "Phoenix",
+    Immortal = "Immortal",
+    Siphoner = "Siphoner",
+    Muse = "Muse",
+    Fairy = "Fairy",
+    Werewitch = "Werewitch",
+    Original = "Original",
+    Tribrid = "Tribrid",
+    Possessed = "Possessed"
+}
+
 
 -- ===== NOTIFICATION =====
 local function notify(message, title, duration)
@@ -207,7 +233,7 @@ local function GetItemsFromPlayer(plr)
     return items
 end
 
--- ===== CACHE UPDATE FUNCTIONS (REPARATE) =====
+-- ===== CACHE UPDATE FUNCTIONS =====
 local function UpdatePlayerCache()
     local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
@@ -222,8 +248,12 @@ local function UpdatePlayerCache()
             if #tx >= 3 and tx[3] ~= MY_NAME then
                 local plr = P:FindFirstChild(tx[3])
                 if plr and plr ~= LP and plr.Name ~= MY_NAME then
-                    local rawSpecie = tx[1]
-                    local sp = S[rawSpecie] or rawSpecie
+                    
+                    -- [REPARAȚIE] Eliminăm spațiile din numele speciei (ex: "Witch " devine "Witch")
+                    local rawSpecie = tx[1]:gsub("^%s*(.-)%s*$", "%1") 
+                    
+                    local sp = S[rawSpecie] or S[rawSpecie:lower()] or S[rawSpecie:upper()] or rawSpecie
+                    
                     local nm = N[tx[2]] or tx[2]
                     if nm == "Qetsiyah" or tx[2] == "Qetsiyah" or tx[2] == "Ancient Witch" then QetsiyahCache[plr.Name] = true else QetsiyahCache[plr.Name] = false end
                     
@@ -245,7 +275,7 @@ local function UpdatePlayerCache()
                     elseif sp == "Tribrid" then color = Color3_fromRGB(182, 208, 226)
                     elseif sp == "Immortal" then color = Color3_fromRGB(126, 53, 248)
                     elseif sp == "Siphoner" then color = Color3_fromRGB(114, 147, 202)
-                    elseif sp == "Muse" then color = Color3_fromRGB(195, 145, 195)
+                    elseif sp == "Muse" then color = Color3_fromRGB(254, 194, 14)
                     elseif sp == "Fairy" then color = Color3_fromRGB(254, 194, 14)
                     elseif sp == "Werewitch" then color = Color3_fromRGB(201, 69, 150)
                     elseif sp == "Firstblood" then color = Color3_fromRGB(178, 58, 64)
@@ -271,19 +301,14 @@ local function UpdatePlayerCache()
     TextCache = newTextCache
 end
 
--- ===== CACHE UPDATE FUNCTIONS (REPARAT PENTRU A ELIMINA DUPLICATELE) =====
 local function UpdateIWOSCache()
     local newIWOS = {}
     local iwosFolder = W:FindFirstChild("IndestructibleWhiteOakStake")
     if iwosFolder then
-        local seen = {} -- Tabel pentru a verifica duplicatele
         for _, stake in pairs(iwosFolder:GetChildren()) do
             local rt = stake:IsA("BasePart") and stake or (stake:IsA("Model") and stake.PrimaryPart)
             if not rt then for _, p in pairs(stake:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
-            if rt and not seen[rt] then -- Verifică dacă nu a fost deja adăugat
-                seen[rt] = true
-                newIWOS[#newIWOS + 1] = rt
-            end
+            if rt then newIWOS[#newIWOS + 1] = rt end
         end
     end
     IWOSCache = newIWOS
@@ -400,7 +425,7 @@ local PLANT_COLORS = {
     Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
 }
 
--- ===== 60 FPS RENDER LOOP (REPARAT) =====
+-- ===== 60 FPS RENDER LOOP =====
 local TARGET_FPS = 60
 local FRAME_TIME = 1 / TARGET_FPS
 local lpx, lpy, lpz = 0, 0, 0
@@ -420,8 +445,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     if not lpRoot then for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end return end
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
-    
-        -- PLAYER ESP
+        -- PLAYER ESP (REPARAT PENTRU BODY JUMPED SI CULORI)
     if Options.EnablePlayerESP then
         local maxDistSq = Options.MaxDist * Options.MaxDist
         local showName  = Options.ShowPlayerName
@@ -433,6 +457,61 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
             if plr then
                 local char = plr.Character
                 if char then
+                    -- VERIFICARE DIRECTĂ PENTRU BODY JUMPED (ESTHER)
+                    local isBodyJumped = false
+                    if plr:GetAttribute("BodyJumped") then
+                        local jumpedBy = plr:GetAttribute("BodyJumpedBy")
+                        if jumpedBy == "Esther Mikaelson" then isBodyJumped = true end
+                    end
+                    if not isBodyJumped then
+                        for _, child in pairs(char:GetChildren()) do
+                            if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then isBodyJumped = true break end
+                        end
+                    end
+                    if not isBodyJumped and char:FindFirstChild("BodyJumped") then isBodyJumped = true end
+                    
+                    -- Dacă e Body Jumped, forțăm textul și culoarea, indiferent de cache
+                    if isBodyJumped then
+                        local head = char:FindFirstChild("Head")
+                        if head then
+                            local pos = head.Position
+                            local dx = pos.X - lpx; local dy = pos.Y - lpy; local dz = pos.Z - lpz
+                            local distSq = dx*dx + dy*dy + dz*dz
+                            
+                            if distSq <= maxDistSq then
+                                local screenPos, onScreen = WorldToScreen(pos)
+                                if onScreen then
+                                    local px, py = screenPos.X, screenPos.Y
+                                    local currentY = py
+                                    
+                                    -- Afișăm direct textul [Body Jumped] cu auriu
+                                    PushText("[Body Jumped] Esther Mikaelson", px, currentY, 16, COLOR_GOLD)
+                                    currentY = currentY + 18
+                                    
+                                    if showName then
+                                        PushText(name, px, currentY, 14, COLOR_GRAY)
+                                        currentY = currentY + 16
+                                    end
+                                    
+                                    if showDist then
+                                        local dist = math_floor(math.sqrt(distSq) + 0.5)
+                                        PushText("[" .. tostring(dist) .. "]", px, currentY, 12, COLOR_GRAY)
+                                        currentY = currentY + 14
+                                    end
+                                    
+                                    if showItems then
+                                        local items = ItemCache[name]
+                                        if items and #items > 0 then PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY) end
+                                    end
+                                end
+                            end
+                        end
+                        continue -- Sărim peste restul buclei pentru acest jucător, deoarece am desenat deja textul special
+                    end
+
+                    -- ---------------------------------------------------------
+                    -- LOGICA NORMALĂ (dacă NU este Body Jumped) începe aici
+                    -- ---------------------------------------------------------
                     local head = char:FindFirstChild("Head")
                     if head then
                         local pos = head.Position
@@ -445,21 +524,39 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 local px, py = screenPos.X, screenPos.Y
                                 local currentY = py
                                 
-                                if BodyJumpedCache[name] then
-                                    PushText("[Body Jumped] Esther Mikaelson", px, currentY, 16, COLOR_GOLD)
-                                    currentY = currentY + 18
-                                else
-                                    local cachedText = TextCache[name]
-                                    if cachedText then 
-                                        PushText(cachedText, px, currentY, 14, data.color) 
-                                        currentY = currentY + 16 
-                                    end
+                                -- RECALCULĂM CULOAREA AICI, ÎN TIMPUL RANDĂRII
+                                local sp = data.sp -- Specia (ex: Witch, Vampire) o luăm direct din data
+                                local color = Color3_fromRGB(255, 255, 255) -- Implicit Alb
+                                
+                                if sp == "Vampire" then color = Color3_fromRGB(196, 30, 58)
+                                elseif sp == "Werewolf" then color = Color3_fromRGB(249, 228, 103)
+                                elseif sp == "Witch" then color = Color3_fromRGB(195, 145, 195)
+                                elseif sp == "Original" then color = Color3_fromRGB(154, 42, 42)
+                                elseif sp == "Hybrid" then color = Color3_fromRGB(245, 185, 102)
+                                elseif sp == "Heretic" then color = Color3_fromRGB(188, 101, 169)
+                                elseif sp == "Mortal" then color = Color3_fromRGB(193, 225, 193)
+                                elseif sp == "Phoenix" then color = Color3_fromRGB(223, 129, 96)
+                                elseif sp == "Hunter" then color = Color3_fromRGB(120, 199, 114)
+                                elseif sp == "Tribrid" then color = Color3_fromRGB(182, 208, 226)
+                                elseif sp == "Immortal" then color = Color3_fromRGB(126, 53, 248)
+                                elseif sp == "Siphoner" then color = Color3_fromRGB(114, 147, 202)
+                                elseif sp == "Muse" then color = Color3_fromRGB(254, 194, 14)
+                                elseif sp == "Fairy" then color = Color3_fromRGB(254, 194, 14)
+                                elseif sp == "Werewitch" then color = Color3_fromRGB(201, 69, 150)
+                                elseif sp == "Firstblood" then color = Color3_fromRGB(178, 58, 64)
+                                elseif sp == "Triblood" then color = Color3_fromRGB(135, 206, 235)
+                                elseif sp == "Bloodwitch" then color = Color3_fromRGB(188, 101, 169)
+                                elseif sp == "Possessed" then color = Color3_fromRGB(255, 215, 0)
                                 end
                                 
-                                -- REPARAȚIE: Afișează numele jucătorului DOAR dacă nu este deja inclus în cachedText
+                                local cachedText = TextCache[name]
+                                if cachedText then 
+                                    PushText(cachedText, px, currentY, 14, color) 
+                                    currentY = currentY + 16 
+                                end
+                                
                                 if showName then
                                     local cachedText = TextCache[name]
-                                    -- Dacă textul din cache NU conține deja numele, îl afișăm separat
                                     if not cachedText or not cachedText:find(name) then
                                         PushText(name, px, currentY, 14, COLOR_GRAY)
                                         currentY = currentY + 16
@@ -484,10 +581,10 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-        -- TOOLS ESP (REPARAT DEFINITIV PENTRU A NU DESENA DUPLICATE)
+    -- TOOLS ESP (REPARAT PENTRU A NU DESENA DUPLICATE FIZICE)
     if Options.EnableToolsESP then
         local toolsMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
-        local lastIwosPos = nil -- Reținem poziția ultimului țăruș desenat
+        local lastIwosPos = nil 
         
         for i = 1, #IWOSCache do
             local rt = IWOSCache[i]
@@ -495,10 +592,9 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                 local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
                 local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
                 
-                -- Verifică dacă acest țăruș este prea aproape de ultimul pe care l-am desenat (sub 2 studs)
                 if lastIwosPos then
                     local distBetween = (Vector3_new(rx, ry, rz) - lastIwosPos).Magnitude
-                    if distBetween < 2 then continue end -- Sărim peste acest duplicat fizic
+                    if distBetween < 2 then continue end
                 end
                 
                 if dx*dx + dy*dy + dz*dz <= toolsMaxDistSq then
@@ -507,7 +603,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                         local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
                         PushText("[Indestructible]", screenPos.X, screenPos.Y - 6, 14, DEFAULT_WHITE)
                         PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, COLOR_OFFWHITE)
-                        lastIwosPos = Vector3_new(rx, ry, rz) -- Actualizăm poziția ultimului desenat
+                        lastIwosPos = Vector3_new(rx, ry, rz)
                     end
                 end
             end
