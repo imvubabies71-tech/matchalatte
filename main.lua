@@ -1,3 +1,107 @@
+<<<<<<< HEAD
+=======
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- 1. GET WEBHOOK FROM PASTEBIN
+local webhook_url = httpget("https://pastebin.com/raw/RnDJ6pfB")
+if webhook_url == "" then
+    print("Could not load webhook!")
+    return
+end
+
+-- 2. GET IDS FROM PASTEBIN
+local whitelist_content = httpget("https://pastebin.com/raw/6uksLa4N")
+local isAllowed = false
+
+if whitelist_content ~= "" then
+    for id in whitelist_content:gmatch("%d+") do
+        if tonumber(id) == player.UserId then
+            isAllowed = true
+            break
+        end
+    end
+end
+
+-- 3. FUNCTION TO SEND TO DISCORD
+local function sendLog(title, description, color)
+    local embed = {{
+        title = title,
+        description = description,
+        color = color or 16711680,
+        footer = { text = "Matcha • " .. os.date("%H:%M:%S") }
+    }}
+    httppost(webhook_url, HttpService:JSONEncode({embeds = embed}))
+end
+
+-- 4. COLLECT INFO (WITH CHECKS)
+local executorName, executorVersion = identifyexecutor()
+local gameName = getgamename() or "N/A"
+local ping = GetPingValue() or 0
+local memory = gcinfo() or 0
+
+-- 5. BUILD MESSAGE
+local statusText = isAllowed and "Authorized" or "Denied"
+local color = isAllowed and 65280 or 16711680
+
+local description = string.format([[
+**Player**
+Name: %s
+Display: %s
+ID: `%d`
+
+**Executor**
+Name: %s
+Version: %s
+Ping: %d ms
+Memory: %s KB
+
+**Game**
+Name: %s
+Place ID: `%s`
+Job ID: `%s`
+
+**Whitelist**
+Status: %s
+Verified ID: `%d`
+
+**Time**
+%s
+]],
+    player.Name,
+    player.DisplayName or player.Name,
+    player.UserId,
+    executorName or "N/A",
+    executorVersion or "N/A",
+    ping,
+    memory,
+    gameName,
+    tostring(game.PlaceId or "N/A"),
+    tostring(game.JobId or "N/A"),
+    statusText,
+    player.UserId,
+    os.date("%Y-%m-%d %H:%M:%S")
+)
+
+-- 6. SEND TO DISCORD
+sendLog(
+    isAllowed and "Executed - Authorized" or "Not Whitelisted - Access Denied",
+    description,
+    color
+)
+
+-- 7. STOP IF NOT WHITELISTED
+if not isAllowed then
+    error("nigger ur not whitelisted!")
+    return
+end
+
+print("a nigger executed")
+
+
+>>>>>>> 6894aab (Update)
 -- Dav's Gui - The Vampire Legends Hub (Matcha Version) - FIXED
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
 
@@ -613,7 +717,11 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         
         for i = 1, #PlantCache do
             local plantData = PlantCache[i]
+<<<<<<< HEAD
             if plantData then  -- ADAUGAT: verificare pentru nil
+=======
+            if plantData then
+>>>>>>> 6894aab (Update)
                 local rt = plantData.root
                 if rt then
                     local nm = plantData.name
