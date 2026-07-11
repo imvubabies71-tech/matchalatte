@@ -92,11 +92,11 @@ sendLog(
 
 -- 7. STOP IF NOT WHITELISTED
 if not isAllowed then
-    error("You are not whitelisted!")
+    error("nigger ur not whitelisted")
     return
 end
 
-print("Whitelist check passed - Loading GUI...")
+print("a nigger executed")
 
 -- ===== START GUI =====
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
