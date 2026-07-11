@@ -1,6 +1,4 @@
-
-=======
-
+-- Dav's Gui - The Vampire Legends Hub (Matcha Version) - FIXED
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -94,15 +92,13 @@ sendLog(
 
 -- 7. STOP IF NOT WHITELISTED
 if not isAllowed then
-    error("nigger ur not whitelisted!")
+    error("You are not whitelisted!")
     return
 end
 
-print("a nigger executed")
+print("Whitelist check passed - Loading GUI...")
 
-
->>>>>>> 6894aab (Update)
--- Dav's Gui - The Vampire Legends Hub (Matcha Version) - FIXED
+-- ===== START GUI =====
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
 
 local win = Lib:CreateWindow({
@@ -717,11 +713,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         
         for i = 1, #PlantCache do
             local plantData = PlantCache[i]
-<<<<<<< HEAD
-            if plantData then  -- ADAUGAT: verificare pentru nil
-=======
             if plantData then
->>>>>>> 6894aab (Update)
                 local rt = plantData.root
                 if rt then
                     local nm = plantData.name
