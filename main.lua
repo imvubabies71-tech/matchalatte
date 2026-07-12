@@ -1,4 +1,4 @@
--- Dav's Gui - The Vampire Legends Hub (Matcha Version) - FIXED
+-- Dav's Gui - The Vampire Legends Hub (Matcha Version) - FIXED (NO SELF ESP)
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -332,7 +332,7 @@ local function GetItemsFromPlayer(plr)
     return items
 end
 
--- ===== CACHE UPDATE FUNCTIONS =====
+-- ===== CACHE UPDATE FUNCTIONS (FĂRĂ SELF) =====
 local function UpdatePlayerCache()
     local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
@@ -350,6 +350,9 @@ local function UpdatePlayerCache()
                 local rawSpecie = tx[1]
                 local charNameTag = tx[2]
                 local displayName = tx[3]
+                
+                -- SKIP SELF - NU arăta propriul jucător
+                if displayName == MY_NAME then continue end
                 
                 local plr = P:FindFirstChild(displayName)
                 
@@ -375,6 +378,7 @@ local function UpdatePlayerCache()
                     end
                 end
                 
+                -- Verificare dublă să nu fie self
                 if plr and plr ~= LP and plr.Name ~= MY_NAME then
                     local cleanSpecie = rawSpecie:gsub("^%s*(.-)%s*$", "%1")
                     local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
@@ -461,11 +465,14 @@ task_spawn(function()
             if lr then
                 local lrp = lr.Position
                 for _, plr in ipairs(P:GetPlayers()) do
+                    -- SKIP SELF în item cache
                     if plr ~= LP and plr.Name ~= MY_NAME then
                         local char = plr.Character
                         if char then
                             local hrp = char:FindFirstChild("HumanoidRootPart")
-                            if hrp and (hrp.Position - lrp).Magnitude <= 500 then ItemCache[plr.Name] = GetItemsFromPlayer(plr) end
+                            if hrp and (hrp.Position - lrp).Magnitude <= 500 then 
+                                ItemCache[plr.Name] = GetItemsFromPlayer(plr) 
+                            end
                         end
                     end
                 end
@@ -555,7 +562,7 @@ local PLANT_COLORS = {
     Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
 }
 
--- ===== 60 FPS RENDER LOOP =====
+-- ===== 60 FPS RENDER LOOP (FĂRĂ SELF ESP) =====
 local TARGET_FPS = 60
 local FRAME_TIME = 1 / TARGET_FPS
 local lpx, lpy, lpz = 0, 0, 0
@@ -569,14 +576,20 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     drawIdx = 0
     
     local lpChar = LP.Character
-    if not lpChar or not lpChar:IsDescendantOf(W) then for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end return end
+    if not lpChar or not lpChar:IsDescendantOf(W) then 
+        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end 
+        return 
+    end
     
     local lpRoot = lpChar:FindFirstChild("HumanoidRootPart")
-    if not lpRoot then for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end return end
+    if not lpRoot then 
+        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end 
+        return 
+    end
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
 
-    -- PLAYER ESP
+    -- PLAYER ESP (FĂRĂ SELF)
     if Options.EnablePlayerESP then
         local maxDistSq = Options.MaxDist * Options.MaxDist
         local showName  = Options.ShowPlayerName
@@ -585,7 +598,9 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         
         for name, data in pairs(PlayerCache) do
             local plr = data.player
-            if plr then
+            
+            -- VERIFICARE SELF - nu arăta propriul jucător
+            if plr and plr ~= LP and plr.Name ~= MY_NAME then
                 local char = plr.Character
                 if char then
                     local head = char:FindFirstChild("Head")
@@ -651,7 +666,9 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 
                                 if showItems then
                                     local items = ItemCache[name]
-                                    if items and #items > 0 then PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY) end
+                                    if items and #items > 0 then 
+                                        PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY) 
+                                    end
                                 end
                             end
                         end
@@ -705,7 +722,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- PLANT ESP (FIXED)
+    -- PLANT ESP
     if Options.EnablePlantESP then
         local plantMaxDistSq = Options.PlantMaxDist * Options.PlantMaxDist
         local showPlantName = Options.ShowPlantName
@@ -786,7 +803,4 @@ if CureData then
     if lr then notify("The Cure is on the map! Distance: " .. math_floor((CureData - lr.Position).Magnitude) .. "s", "Cure Info", 5)
     else notify("The Cure is on the map!", "Cure Info", 5) end
 end
-notify("Welcome!", "Dav's Gui - The Vampire Legends Hub", 6) 
-
-
-
+notify("Welcome!", "Dav's Gui - The Vampire Legends Hub", 6)
