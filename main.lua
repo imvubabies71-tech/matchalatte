@@ -1,5 +1,5 @@
 --[[
-    SUPER OPTIMIZED VERSION - LUAU VM COMPATIBLE
+    OPTIMIZED VERSION - LUAU VM COMPATIBLE
     Webhook loading kept as original
     Optimized: caching, ESP rendering, memory usage, loop performance
 ]]
@@ -127,7 +127,6 @@ local ipairs = ipairs
 local task_wait = task.wait
 local task_spawn = task.spawn
 local tick = tick
-local next = next
 
 local P = game:GetService("Players")
 local W = game:GetService("Workspace")
@@ -152,7 +151,7 @@ local Options = {
     ESPRefreshRate = 15,
 }
 
--- ===== DICTIONARIES =====
+-- ===== DICTIONARIES (COMPRESSED) =====
 local N = {
     ["The Hybrid"]="Klaus Mikaelson",["Loyal Sister"]="Rebekah Mikaelson",
     ["Noble Brother"]="Elijah Mikaelson",["Lost Sister"]="Freya Mikaelson",
@@ -464,7 +463,7 @@ local function GetItemsFromPlayer(plr)
     return items
 end
 
--- ===== CACHE UPDATE FUNCTIONS =====
+-- ===== CACHE UPDATE FUNCTIONS (OPTIMIZED) =====
 local function UpdatePlayerCache()
     local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
@@ -731,7 +730,7 @@ task_spawn(function()
 end)
 
 -- ===== ESP DRAWING SYSTEM (OPTIMIZED) =====
-local MAX_DRAWINGS = 300
+local MAX_DRAWINGS = 200
 local DrawPool = {}
 local DrawStates = {}
 
@@ -764,7 +763,7 @@ local PLANT_COLORS = {
 -- ===== MAIN RENDER LOOP (OPTIMIZED) =====
 local lastESPUpdate = 0
 local lastFrameTime = 0
-local RENDER_FPS = 100
+local RENDER_FPS = 60
 local FRAME_TIME = 1 / RENDER_FPS
 
 local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
