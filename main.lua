@@ -204,32 +204,26 @@ local function notify(message, title, duration)
 end
 
 -- ===== FUNCTIE PENTRU A VERIFICA DACĂ ESTE BODY JUMPED =====
--- ===== FIXED: BODY JUMPED DETECTION =====
 local function CheckIfBodyJumped(plr)
     if not plr then return false end
     local char = plr.Character
     if not char then return false end
     
-    -- Verifică atributul BodyJumped
     local jumped = plr:GetAttribute("BodyJumped")
     if jumped then
         local jumpedBy = plr:GetAttribute("BodyJumpedBy")
         if jumpedBy == "Esther Mikaelson" then return true end
-        -- Dacă e true, e de la Esther
         if jumped == true then return true end
     end
     
-    -- Verifică dacă există obiectul BodyJumped în caracter
     if char:FindFirstChild("BodyJumped") then return true end
     
-    -- Verifică dacă există PossessionMarkPart
     for _, child in pairs(char:GetChildren()) do
         if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then 
             return true 
         end
     end
     
-    -- Verifică și în descendenți (pentru siguranță)
     for _, child in pairs(char:GetDescendants()) do
         if child.Name == "PossessionMarkPart" then 
             return true 
@@ -279,7 +273,7 @@ win:AddSettingsTab("cog")
 local PlayerESP = Visuals:Section("Player ESP", "Left")
 PlayerESP:Toggle("Enable Player ESP", Options.EnablePlayerESP, function(on) Options.EnablePlayerESP = on; notify("Player ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
 PlayerESP:Slider("Max Distance", Options.MaxDist, 500, 500, 5000, "s", function(v) Options.MaxDist = v end)
-PlayerESP:Slider("Update Rate (FPS)", Options.UpdateRate, 10, 5, 60, "fps", function(v) Options.UpdateRate = v end)
+PlayerESP:Slider("Update Rate (FPS)", Options.UpdateRate, 30, 5, 120, "fps", function(v) Options.UpdateRate = v end)
 
 local ToolsESP = Visuals:Section("Tools ESP", "Left")
 ToolsESP:Toggle("Enable IWOS ESP", Options.EnableToolsESP, function(on) Options.EnableToolsESP = on; notify("IWOS ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
@@ -377,30 +371,46 @@ local function GetItemsFromPlayer(plr)
         elseif n:find("WhiteOak") and not n:find("Indestructible") then
             items[#items + 1] = "WhiteOak"
         elseif n:find("Indestructible") then
-            items[#items + 1] = "IWOS"
+            items[#items + 1] = "Indestructible"
         end
     end
+    
     local bp = plr:FindFirstChild("Backpack")
     local char = plr.Character
-    if bp then for _, t in pairs(bp:GetChildren()) do check(t) end end
+    if bp then for _, t in pairs(bp:GetChildren()) do if t:IsA("Tool") then check(t) end end end
     if char then for _, t in pairs(char:GetChildren()) do if t:IsA("Tool") then check(t) end end end
     return items
 end
 
--- ===== CACHE UPDATE FUNCTIONS (FĂRĂ SELF) =====
--- ===== FIXED: CACHE UPDATE FUNCTIONS =====
+-- ===== CACHE UPDATE FUNCTIONS =====
 local function UpdatePlayerCache()
     local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
     local new = {}
     local newTextCache = {}
     
-    -- Creează un map pentru jucătorii body jumped
+    -- Creează un map pentru jucătorii body jumped si Silas
     local bodyJumpedPlayers = {}
+    local silasPlayers = {}
+    
     for _, p in ipairs(P:GetPlayers()) do
         if p ~= LP and p.Name ~= MY_NAME then
             if CheckIfBodyJumped(p) then
                 bodyJumpedPlayers[p.Name] = p
+            end
+            -- Verifică dacă e Silas
+            local charName = p:GetAttribute("CharacterName")
+            if charName == "The Trickster" or charName == "Silas" then
+                silasPlayers[p.Name] = p
+            elseif p:GetAttribute("DisguiseId") then
+                silasPlayers[p.Name] = p
+            else
+                local char = p.Character
+                if char then
+                    if char:GetAttribute("Disguise") or char:FindFirstChild("Disguise") then
+                        silasPlayers[p.Name] = p
+                    end
+                end
             end
         end
     end
@@ -421,14 +431,13 @@ local function UpdatePlayerCache()
                 
                 local plr = P:FindFirstChild(displayName)
                 local isBodyJumped = false
+                local isSilas = false
                 
-                -- Dacă nu găsim jucătorul după nume, verificăm dacă e body jumped
                 if not plr then
-                    -- Căutăm în bodyJumpedPlayers după numele afișat
+                    -- Căutăm în bodyJumpedPlayers
                     for _, p in pairs(bodyJumpedPlayers) do
                         local char = p.Character
                         if char then
-                            -- Verificăm dacă numele afișat se potrivește cu un numetag
                             local head = char:FindFirstChild("Head")
                             if head then
                                 for _, bg in pairs(head:GetChildren()) do
@@ -451,11 +460,56 @@ local function UpdatePlayerCache()
                         end
                         if plr then break end
                     end
+                    
+                    -- Dacă nu e body jumped, verifică dacă e Silas
+                    if not plr then
+                        for _, p in pairs(silasPlayers) do
+                            local char = p.Character
+                            if char then
+                                local head = char:FindFirstChild("Head")
+                                if head then
+                                    for _, bg in pairs(head:GetChildren()) do
+                                        if bg:IsA("BillboardGui") then
+                                            local labels = {}
+                                            for _, lbl in pairs(bg:GetDescendants()) do
+                                                if lbl:IsA("TextLabel") and lbl.Text ~= "" then
+                                                    labels[#labels + 1] = lbl.Text
+                                                end
+                                            end
+                                            if #labels >= 3 and labels[3] == displayName then
+                                                plr = p
+                                                isSilas = true
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            if plr then break end
+                        end
+                    end
                 else
                     -- Verifică dacă jucătorul găsit e body jumped
                     isBodyJumped = CheckIfBodyJumped(plr)
                     if isBodyJumped then
                         BodyJumpedCache[plr.Name] = true
+                    end
+                    
+                    -- Verifică dacă e Silas
+                    if not isBodyJumped then
+                        local charName = plr:GetAttribute("CharacterName")
+                        if charName == "The Trickster" or charName == "Silas" then
+                            isSilas = true
+                        elseif plr:GetAttribute("DisguiseId") then
+                            isSilas = true
+                        else
+                            local char = plr.Character
+                            if char then
+                                if char:GetAttribute("Disguise") or char:FindFirstChild("Disguise") then
+                                    isSilas = true
+                                end
+                            end
+                        end
                     end
                 end
                 
@@ -464,7 +518,22 @@ local function UpdatePlayerCache()
                     local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
                     
                     local nm = N[charNameTag] or charNameTag
-                    if sp == "Immortal" then nm = (charNameTag == "The Anchor" or charNameTag == "Amara") and "Amara" or "Silas" end
+                    
+                    -- Dacă e Silas, forțează specia la Immortal (mov) și numele la Silas
+                    if isSilas then
+                        sp = "Immortal"
+                        nm = "Silas"
+                    elseif sp == "Immortal" then
+                        if charNameTag == "The Anchor" or charNameTag == "Amara" then
+                            nm = "Amara"
+                            sp = "Immortal"
+                        else
+                            -- Orice alt Immortal e Silas deghizat
+                            isSilas = true
+                            sp = "Immortal"
+                            nm = "Silas"
+                        end
+                    end
                     
                     if isBodyJumped then
                         nm = N[charNameTag] or charNameTag
@@ -473,11 +542,13 @@ local function UpdatePlayerCache()
                     
                     local color = SPECIES_COLORS[sp] or SPECIES_COLORS.Default
                     
-                    new[plr.Name] = {sp = sp, nm = nm, color = color, player = plr}
+                    new[plr.Name] = {sp = sp, nm = nm, color = color, player = plr, isSilas = isSilas}
                     
                     local parts = {}
                     if isBodyJumped then
-                        parts[#parts + 1] = "Esther Mikaelson " 
+                        parts[#parts + 1] = "Esther Mikaelson"
+                    elseif isSilas then
+                        parts[#parts + 1] = "Silas"
                     else
                         if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
                         if Options.ShowRealName then parts[#parts + 1] = nm end
@@ -507,7 +578,6 @@ end
 local function UpdateCureCache()
     local newCure = {}
     
-    -- Caută TheCure în SilasTomb
     local theCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("SilasTomb") and W.Interactables.SilasTomb:FindFirstChild("CureBox") and W.Interactables.SilasTomb.CureBox:FindFirstChild("TheCure")
     if theCure then
         local rt = theCure:IsA("BasePart") and theCure or (theCure:IsA("Model") and theCure.PrimaryPart)
@@ -515,7 +585,6 @@ local function UpdateCureCache()
         if rt then newCure[#newCure + 1] = rt end
     end
     
-    -- Caută QetsiyahCure
     local qetCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("QetsiyahCure")
     if qetCure then
         local rt = qetCure:IsA("BasePart") and qetCure or (qetCure:IsA("Model") and qetCure.PrimaryPart)
@@ -608,7 +677,7 @@ _G.PLAYER_ESP_CLEANUP = function()
     playerDrawings = {}
 end
 
-local FONT = Drawing.Fonts.SystemBold or Drawing.Fonts.System
+local FONT = Drawing.Fonts.SystemBold 
 local MAX_PLAYER_SLOTS = 100
 
 local function newText(color)
@@ -700,6 +769,7 @@ local function rebuildPlayerESP()
                             headPos = pos,
                             color = data.color,
                             isBodyJumped = BodyJumpedCache[name] or false,
+                            isSilas = data.isSilas or false,
                             items = showItems and ItemCache[name] or nil,
                             species = data.sp,
                             realName = data.nm,
@@ -785,7 +855,7 @@ local function UpdatePlayerESP()
             if Options.ShowDistance then
                 wText(s.dist, it.distText)
                 wPos(s.dist, px, currentY)
-                wCol(s.dist, Color3_fromRGB(180, 180, 180))
+                wCol(s.dist, Color3_fromRGB(229, 228, 226))
                 wSize(s.dist, 12)
                 wVis(s.dist, true)
                 currentY = currentY + 14
@@ -796,7 +866,7 @@ local function UpdatePlayerESP()
             if Options.ShowItems and it.items and #it.items > 0 then
                 wText(s.items, table_concat(it.items, " "))
                 wPos(s.items, px, currentY)
-                wCol(s.items, Color3_fromRGB(255, 255, 255))
+                wCol(s.items, Color3_fromRGB(180, 180, 180))
                 wSize(s.items, 11)
                 wVis(s.items, true)
             else
@@ -920,7 +990,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- CURE ESP (TheCure si QetsiyahCure ca ESP separat)
+    -- CURE ESP
     if Options.EnableCureESP then
         local cureMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
         
@@ -934,7 +1004,6 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                     local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + TOOL_Y_OFFSET, rz))
                     if onScreen then
                         local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                        -- Verifică dacă e TheCure sau QetsiyahCure
                         if rt.Name == "TheCure" then
                             PushText("[The Cure]", screenPos.X, screenPos.Y - 6, 14, COLOR_CURE)
                         elseif rt.Name == "QetsiyahCure" then
@@ -1007,7 +1076,6 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- Apply all visible drawings
     for i = 1, MAX_DRAWINGS do
         local d = DrawPool[i]
         if DrawVisible[i] then
