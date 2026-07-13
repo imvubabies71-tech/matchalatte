@@ -204,19 +204,38 @@ local function notify(message, title, duration)
 end
 
 -- ===== FUNCTIE PENTRU A VERIFICA DACĂ ESTE BODY JUMPED =====
+-- ===== FIXED: BODY JUMPED DETECTION =====
 local function CheckIfBodyJumped(plr)
     if not plr then return false end
     local char = plr.Character
-    if char then
-        if plr:GetAttribute("BodyJumped") then
-            local jumpedBy = plr:GetAttribute("BodyJumpedBy")
-            if jumpedBy == "Esther Mikaelson" then return true end
-        end
-        for _, child in pairs(char:GetChildren()) do
-            if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then return true end
-        end
-        if char:FindFirstChild("BodyJumped") then return true end
+    if not char then return false end
+    
+    -- Verifică atributul BodyJumped
+    local jumped = plr:GetAttribute("BodyJumped")
+    if jumped then
+        local jumpedBy = plr:GetAttribute("BodyJumpedBy")
+        if jumpedBy == "Esther Mikaelson" then return true end
+        -- Dacă e true, e de la Esther
+        if jumped == true then return true end
     end
+    
+    -- Verifică dacă există obiectul BodyJumped în caracter
+    if char:FindFirstChild("BodyJumped") then return true end
+    
+    -- Verifică dacă există PossessionMarkPart
+    for _, child in pairs(char:GetChildren()) do
+        if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then 
+            return true 
+        end
+    end
+    
+    -- Verifică și în descendenți (pentru siguranță)
+    for _, child in pairs(char:GetDescendants()) do
+        if child.Name == "PossessionMarkPart" then 
+            return true 
+        end
+    end
+    
     return false
 end
 
@@ -369,11 +388,22 @@ local function GetItemsFromPlayer(plr)
 end
 
 -- ===== CACHE UPDATE FUNCTIONS (FĂRĂ SELF) =====
+-- ===== FIXED: CACHE UPDATE FUNCTIONS =====
 local function UpdatePlayerCache()
     local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
     local new = {}
     local newTextCache = {}
+    
+    -- Creează un map pentru jucătorii body jumped
+    local bodyJumpedPlayers = {}
+    for _, p in ipairs(P:GetPlayers()) do
+        if p ~= LP and p.Name ~= MY_NAME then
+            if CheckIfBodyJumped(p) then
+                bodyJumpedPlayers[p.Name] = p
+            end
+        end
+    end
     
     for _, t in pairs(fd:GetChildren()) do
         if t:IsA("BillboardGui") then
@@ -387,42 +417,54 @@ local function UpdatePlayerCache()
                 local charNameTag = tx[2]
                 local displayName = tx[3]
                 
-                -- SKIP SELF - NU arăta propriul jucător
                 if displayName == MY_NAME then continue end
                 
                 local plr = P:FindFirstChild(displayName)
+                local isBodyJumped = false
                 
+                -- Dacă nu găsim jucătorul după nume, verificăm dacă e body jumped
                 if not plr then
-                    for _, p in ipairs(P:GetPlayers()) do
-                        if p.Name ~= MY_NAME then
-                            local checkChar = p.Character
-                            if checkChar then
-                                local isJumped = false
-                                if p:GetAttribute("BodyJumped") then isJumped = true end
-                                if checkChar:FindFirstChild("BodyJumped") then isJumped = true end
-                                for _, child in pairs(checkChar:GetChildren()) do
-                                    if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then isJumped = true end
-                                end
-                                
-                                if isJumped then
-                                    plr = p
-                                    BodyJumpedCache[plr.Name] = true
-                                    break
+                    -- Căutăm în bodyJumpedPlayers după numele afișat
+                    for _, p in pairs(bodyJumpedPlayers) do
+                        local char = p.Character
+                        if char then
+                            -- Verificăm dacă numele afișat se potrivește cu un numetag
+                            local head = char:FindFirstChild("Head")
+                            if head then
+                                for _, bg in pairs(head:GetChildren()) do
+                                    if bg:IsA("BillboardGui") then
+                                        local labels = {}
+                                        for _, lbl in pairs(bg:GetDescendants()) do
+                                            if lbl:IsA("TextLabel") and lbl.Text ~= "" then
+                                                labels[#labels + 1] = lbl.Text
+                                            end
+                                        end
+                                        if #labels >= 3 and labels[3] == displayName then
+                                            plr = p
+                                            isBodyJumped = true
+                                            BodyJumpedCache[p.Name] = true
+                                            break
+                                        end
+                                    end
                                 end
                             end
                         end
+                        if plr then break end
+                    end
+                else
+                    -- Verifică dacă jucătorul găsit e body jumped
+                    isBodyJumped = CheckIfBodyJumped(plr)
+                    if isBodyJumped then
+                        BodyJumpedCache[plr.Name] = true
                     end
                 end
                 
-                -- Verificare dublă să nu fie self
                 if plr and plr ~= LP and plr.Name ~= MY_NAME then
                     local cleanSpecie = rawSpecie:gsub("^%s*(.-)%s*$", "%1")
                     local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
                     
                     local nm = N[charNameTag] or charNameTag
                     if sp == "Immortal" then nm = (charNameTag == "The Anchor" or charNameTag == "Amara") and "Amara" or "Silas" end
-                    
-                    local isBodyJumped = BodyJumpedCache[plr.Name] or false
                     
                     if isBodyJumped then
                         nm = N[charNameTag] or charNameTag
@@ -435,7 +477,7 @@ local function UpdatePlayerCache()
                     
                     local parts = {}
                     if isBodyJumped then
-                        parts[#parts + 1] = "[Body Jumped] " .. nm
+                        parts[#parts + 1] = "Esther Mikaelson " 
                     else
                         if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
                         if Options.ShowRealName then parts[#parts + 1] = nm end
