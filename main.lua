@@ -91,11 +91,11 @@ sendLog(
 
 -- 7. STOP IF NOT WHITELISTED
 if not isAllowed then
-    error("nigger ur not whitelisted")
+    error("Access Denied: You are not whitelisted.")
     return
 end
 
-print("a nigger executed")
+print("Script executed successfully")
 
 -- ===== START GUI =====
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
@@ -208,28 +208,28 @@ local function CheckIfBodyJumped(plr)
     if not plr then return false end
     local char = plr.Character
     if not char then return false end
-    
+
     local jumped = plr:GetAttribute("BodyJumped")
     if jumped then
         local jumpedBy = plr:GetAttribute("BodyJumpedBy")
         if jumpedBy == "Esther Mikaelson" then return true end
         if jumped == true then return true end
     end
-    
+
     if char:FindFirstChild("BodyJumped") then return true end
-    
+
     for _, child in pairs(char:GetChildren()) do
         if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then 
             return true 
         end
     end
-    
+
     for _, child in pairs(char:GetDescendants()) do
         if child.Name == "PossessionMarkPart" then 
             return true 
         end
     end
-    
+
     return false
 end
 
@@ -262,6 +262,9 @@ local IWOSCache = {}
 local CureCache = {}
 local TextCache = {}
 local BodyJumpedCache = {}
+
+-- ===== LOCAL ESP DATA =====
+local PlayerESPData = {} -- Local variable instead of global
 
 -- ===== UI SETUP =====
 local Visuals = win:Tab("Visuals", "eye")
@@ -359,7 +362,7 @@ local function GetItemsFromPlayer(plr)
             items[#items + 1] = "Indestructible"
         end
     end
-    
+
     local bp = plr:FindFirstChild("Backpack")
     local char = plr.Character
     if bp then for _, t in pairs(bp:GetChildren()) do if t:IsA("Tool") then check(t) end end end
@@ -373,10 +376,10 @@ local function UpdatePlayerCache()
     if not fd then return end
     local new = {}
     local newTextCache = {}
-    
+
     local bodyJumpedPlayers = {}
     local silasPlayers = {}
-    
+
     for _, p in ipairs(P:GetPlayers()) do
         if p ~= LP and p.Name ~= MY_NAME then
             if CheckIfBodyJumped(p) then
@@ -397,25 +400,25 @@ local function UpdatePlayerCache()
             end
         end
     end
-    
+
     for _, t in pairs(fd:GetChildren()) do
         if t:IsA("BillboardGui") then
             local tx = {}
             for _, c in pairs(t:GetDescendants()) do
                 if c:IsA("TextLabel") and c.Text ~= "" then tx[#tx + 1] = c.Text end
             end
-            
+
             if #tx >= 3 then
                 local rawSpecie = tx[1]
                 local charNameTag = tx[2]
                 local displayName = tx[3]
-                
+
                 if displayName == MY_NAME then continue end
-                
+
                 local plr = P:FindFirstChild(displayName)
                 local isBodyJumped = false
                 local isSilas = false
-                
+
                 if not plr then
                     for _, p in pairs(bodyJumpedPlayers) do
                         local char = p.Character
@@ -442,7 +445,7 @@ local function UpdatePlayerCache()
                         end
                         if plr then break end
                     end
-                    
+
                     if not plr then
                         for _, p in pairs(silasPlayers) do
                             local char = p.Character
@@ -474,7 +477,7 @@ local function UpdatePlayerCache()
                     if isBodyJumped then
                         BodyJumpedCache[plr.Name] = true
                     end
-                    
+
                     if not isBodyJumped then
                         local charName = plr:GetAttribute("CharacterName")
                         if charName == "The Trickster" or charName == "Silas" then
@@ -491,13 +494,13 @@ local function UpdatePlayerCache()
                         end
                     end
                 end
-                
+
                 if plr and plr ~= LP and plr.Name ~= MY_NAME then
                     local cleanSpecie = rawSpecie:gsub("^%s*(.-)%s*$", "%1")
                     local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
-                    
+
                     local nm = N[charNameTag] or charNameTag
-                    
+
                     if isSilas then
                         sp = "Immortal"
                         nm = "Silas"
@@ -511,16 +514,16 @@ local function UpdatePlayerCache()
                             nm = "Silas"
                         end
                     end
-                    
+
                     if isBodyJumped then
                         nm = N[charNameTag] or charNameTag
                         sp = "Witch"
                     end
-                    
+
                     local color = SPECIES_COLORS[sp] or SPECIES_COLORS.Default
-                    
+
                     new[plr.Name] = {sp = sp, nm = nm, color = color, player = plr, isSilas = isSilas}
-                    
+
                     local parts = {}
                     if isBodyJumped then
                         parts[#parts + 1] = "Esther Mikaelson"
@@ -554,34 +557,40 @@ end
 
 local function UpdateCureCache()
     local newCure = {}
-    
+
     local theCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("SilasTomb") and W.Interactables.SilasTomb:FindFirstChild("CureBox") and W.Interactables.SilasTomb.CureBox:FindFirstChild("TheCure")
     if theCure then
         local rt = theCure:IsA("BasePart") and theCure or (theCure:IsA("Model") and theCure.PrimaryPart)
         if not rt then for _, p in pairs(theCure:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
         if rt then newCure[#newCure + 1] = rt end
     end
-    
+
     local qetCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("QetsiyahCure")
     if qetCure then
         local rt = qetCure:IsA("BasePart") and qetCure or (qetCure:IsA("Model") and qetCure.PrimaryPart)
         if not rt then for _, p in pairs(qetCure:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
         if rt then newCure[#newCure + 1] = rt end
     end
-    
+
     CureCache = newCure
 end
 
 -- ===== BACKGROUND CACHE UPDATES =====
 local running = true
 
+-- Increased cache update intervals for better performance
 task_spawn(function()
-    while running do task_wait(2) UpdatePlayerCache() UpdateIWOSCache() UpdateCureCache() end
+    while running do 
+        task_wait(8) -- Increased from 2 to 8 seconds
+        UpdatePlayerCache() 
+        UpdateIWOSCache() 
+        UpdateCureCache() 
+    end
 end)
 
 task_spawn(function()
     while running do
-        task_wait(3)
+        task_wait(5) -- Increased from 3 to 5 seconds
         if Options.ShowItems and Options.EnablePlayerESP then
             local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
             if lr then
@@ -604,7 +613,7 @@ end)
 
 task_spawn(function()
     while running do
-        task_wait(10)
+        task_wait(12) -- Increased from 10 to 12 seconds
         if Options.EnablePlantESP then
             local newPlants = {}
             local fd = W:FindFirstChild("Interactables")
@@ -669,100 +678,109 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     local currentTime = tick()
     if currentTime - lastFrameTime < FRAME_TIME then return end
     lastFrameTime = currentTime
-    
+
     if not running then return end
-    
+
     local drawIdx = 0
-    
+
     local lpChar = LP.Character
     if not lpChar or not lpChar:IsDescendantOf(W) then
         for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
         return 
     end
-    
+
     local lpRoot = lpChar:FindFirstChild("HumanoidRootPart")
     if not lpRoot then
         for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
         return 
     end
-    
+
     local lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
-    
-   -- ===== PLAYER ESP =====
-if Options.EnablePlayerESP then
-    -- Store ESP data for rendering (update at configured rate)
-    if currentTime - lastESPUpdate >= (1 / Options.ESPRefreshRate) then
-        lastESPUpdate = currentTime
-        
-        local maxDist = Options.MaxDist
-        local maxDistSq = maxDist * maxDist
-        local showItems = Options.ShowItems
-        local showDist = Options.ShowDistance
-        local showName = Options.ShowPlayerName
-        
-        -- Clear previous frame's player ESP (we'll rebuild it)
-        -- The player ESP data is stored in a temporary table
-        if not _PlayerESPData then _PlayerESPData = {} end
-        local espData = _PlayerESPData
-        local dataIdx = 0
-        
-        for name, data in pairs(PlayerCache) do
-            if dataIdx >= 200 then break end
-            
-            local plr = data.player
-            if plr and plr ~= LP and plr.Name ~= MY_NAME then
-                local char = plr.Character
-                if char then
-                    local head = char:FindFirstChild("Head")
-                    if head then
-                        local pos = head.Position
-                        local dx = pos.X - lpx
-                        local dy = pos.Y - lpy
-                        local dz = pos.Z - lpz
-                        local distSq = dx*dx + dy*dy + dz*dz
-                        
-                        if distSq <= maxDistSq then
-                            local dist = math_floor(math_sqrt(distSq) + 0.5)
-                            
-                            dataIdx = dataIdx + 1
-                            espData[dataIdx] = {
-                                headPos = pos,
-                                name = name,
-                                color = data.color,
-                                displayText = TextCache[name],
-                                dist = dist,
-                                items = showItems and ItemCache[name] or nil,
-                                showName = showName and not (TextCache[name] and TextCache[name]:find(name)),
-                                showDist = showDist,
-                                showItems = showItems
-                            }
+
+    -- ===== PLAYER ESP =====
+    if Options.EnablePlayerESP then
+        -- Update ESP data at configured rate
+        if currentTime - lastESPUpdate >= (1 / Options.ESPRefreshRate) then
+            lastESPUpdate = currentTime
+
+            local maxDist = Options.MaxDist
+            local maxDistSq = maxDist * maxDist
+            local showItems = Options.ShowItems
+            local showDist = Options.ShowDistance
+            local showName = Options.ShowPlayerName
+
+            -- Clear previous frame's player ESP data
+            local dataIdx = 0
+
+            for name, data in pairs(PlayerCache) do
+                if dataIdx >= 200 then break end
+
+                local plr = data.player
+                if plr and plr ~= LP and plr.Name ~= MY_NAME then
+                    local char = plr.Character
+                    if char then
+                        local head = char:FindFirstChild("Head")
+                        if head then
+                            local pos = head.Position
+                            local dx = pos.X - lpx
+                            local dy = pos.Y - lpy
+                            local dz = pos.Z - lpz
+                            local distSq = dx*dx + dy*dy + dz*dz
+
+                            if distSq <= maxDistSq then
+                                local dist = math_floor(math_sqrt(distSq) + 0.5)
+
+                                dataIdx = dataIdx + 1
+                                PlayerESPData[dataIdx] = {
+                                    headPos = pos,
+                                    name = name,
+                                    color = data.color,
+                                    displayText = TextCache[name],
+                                    dist = dist,
+                                    items = showItems and ItemCache[name] or nil,
+                                    showName = showName and not (TextCache[name] and TextCache[name]:find(name)),
+                                    showDist = showDist,
+                                    showItems = showItems,
+                                    -- Cache screen position for next frames
+                                    screenPos = nil,
+                                    onScreen = false
+                                }
+                            end
                         end
                     end
                 end
             end
+
+            -- Mark unused slots
+            for i = dataIdx + 1, #PlayerESPData do
+                PlayerESPData[i] = nil
+            end
         end
-        
-        -- Mark unused slots
-        for i = dataIdx + 1, #espData do
-            espData[i] = nil
-        end
-        
-        _PlayerESPData = espData
-    end
-    
-    -- Render the stored ESP data every frame
-    local espData = _PlayerESPData
-    if espData then
-        for i = 1, #espData do
+
+        -- Render the stored ESP data every frame with cached screen positions
+        for i = 1, #PlayerESPData do
             if drawIdx >= MAX_DRAWINGS - 10 then break end
-            
-            local entry = espData[i]
+
+            local entry = PlayerESPData[i]
             if entry then
-                local screenPos, onScreen = WorldToScreen(entry.headPos)
+                -- Use cached screen position if available, otherwise calculate
+                local screenPos, onScreen
+                if entry.screenPos and entry.onScreen then
+                    screenPos = entry.screenPos
+                    onScreen = true
+                else
+                    screenPos, onScreen = WorldToScreen(entry.headPos)
+                    -- Cache the result for future frames
+                    if onScreen then
+                        entry.screenPos = screenPos
+                        entry.onScreen = true
+                    end
+                end
+                
                 if onScreen then
                     local px, py = screenPos.X, screenPos.Y
                     local currentY = py - 6
-                    
+
                     -- Main display text
                     if entry.displayText and entry.displayText ~= "" then
                         drawIdx = drawIdx + 1
@@ -775,7 +793,7 @@ if Options.EnablePlayerESP then
                         s[6] = entry.color
                         currentY = currentY + 16
                     end
-                    
+
                     -- Player name
                     if entry.showName then
                         drawIdx = drawIdx + 1
@@ -788,7 +806,7 @@ if Options.EnablePlayerESP then
                         s[6] = COLOR_GRAY
                         currentY = currentY + 16
                     end
-                    
+
                     -- Distance
                     if entry.showDist then
                         drawIdx = drawIdx + 1
@@ -801,7 +819,7 @@ if Options.EnablePlayerESP then
                         s[6] = COLOR_OFFWHITE
                         currentY = currentY + 14
                     end
-                    
+
                     -- Items
                     if entry.showItems and entry.items and #entry.items > 0 then
                         drawIdx = drawIdx + 1
@@ -817,24 +835,23 @@ if Options.EnablePlayerESP then
             end
         end
     end
-end
-    
+
     -- ===== IWOS ESP =====
     if Options.EnableToolsESP then
         local toolsMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
-        
+
         for i = 1, #IWOSCache do
             if drawIdx >= MAX_DRAWINGS - 5 then break end
             local rt = IWOSCache[i]
             if rt and rt.Position then
                 local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
                 local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
-                
+
                 if dx*dx + dy*dy + dz*dz <= toolsMaxDistSq then
                     local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + 1, rz))
                     if onScreen then
                         local dist = math_floor(math_sqrt(dx*dx + dy*dy + dz*dz) + 0.5)
-                        
+
                         drawIdx = drawIdx + 1
                         local s = DrawStates[drawIdx]
                         s[1] = true
@@ -843,7 +860,7 @@ end
                         s[4] = screenPos.Y - 6
                         s[5] = 14
                         s[6] = COLOR_WHITE
-                        
+
                         drawIdx = drawIdx + 1
                         s = DrawStates[drawIdx]
                         s[1] = true
@@ -857,18 +874,18 @@ end
             end
         end
     end
-    
+
     -- ===== CURE ESP =====
     if Options.EnableCureESP then
         local cureMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
-        
+
         for i = 1, #CureCache do
             if drawIdx >= MAX_DRAWINGS - 5 then break end
             local rt = CureCache[i]
             if rt and rt.Position then
                 local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
                 local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
-                
+
                 if dx*dx + dy*dy + dz*dz <= cureMaxDistSq then
                     local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + 1, rz))
                     if onScreen then
@@ -881,7 +898,7 @@ end
                             label = "[Qet Cure]"
                             col = COLOR_QETCURE
                         end
-                        
+
                         drawIdx = drawIdx + 1
                         local s = DrawStates[drawIdx]
                         s[1] = true
@@ -890,7 +907,7 @@ end
                         s[4] = screenPos.Y - 6
                         s[5] = 14
                         s[6] = col
-                        
+
                         drawIdx = drawIdx + 1
                         s = DrawStates[drawIdx]
                         s[1] = true
@@ -904,13 +921,13 @@ end
             end
         end
     end
-    
+
     -- ===== PLANT ESP =====
     if Options.EnablePlantESP then
         local plantMaxDistSq = Options.PlantMaxDist * Options.PlantMaxDist
         local showPlantName = Options.ShowPlantName
         local showPlantDist = Options.ShowPlantDist
-        
+
         for i = 1, #PlantCache do
             if drawIdx >= MAX_DRAWINGS - 5 then break end
             local plantData = PlantCache[i]
@@ -920,7 +937,7 @@ end
                     local nm = plantData.name
                     local plantVis = false
                     local plantColorIdx = 0
-                    
+
                     if nm == PLANT_NAMES[1] then plantVis = Options.ShowWolfsbane; plantColorIdx = 1
                     elseif nm == PLANT_NAMES[2] then plantVis = Options.ShowVampite; plantColorIdx = 2
                     elseif nm == PLANT_NAMES[3] then plantVis = Options.ShowSenia; plantColorIdx = 3
@@ -932,11 +949,11 @@ end
                     elseif nm == PLANT_NAMES[9] then plantVis = Options.ShowDerrida; plantColorIdx = 9
                     elseif nm == PLANT_NAMES[10] then plantVis = Options.ShowSanguinia; plantColorIdx = 10
                     elseif nm == PLANT_NAMES[11] then plantVis = Options.ShowPerennia; plantColorIdx = 11 end
-                    
+
                     if plantVis then
                         local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
                         local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
-                        
+
                         if dx*dx + dy*dy + dz*dz <= plantMaxDistSq then
                             local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + 1, rz))
                             if onScreen then
@@ -969,7 +986,7 @@ end
             end
         end
     end
-    
+
     -- ===== APPLY ALL DRAWINGS =====
     for i = 1, MAX_DRAWINGS do
         local d = DrawPool[i]
