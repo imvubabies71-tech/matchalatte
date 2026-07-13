@@ -246,6 +246,7 @@ local PlayerCache = {}
 local ItemCache = {}
 local PlantCache = {}
 local IWOSCache = {}
+local CureCache = {}
 local CureData = nil
 local TextCache = {}
 local BodyJumpedCache = {}
@@ -282,13 +283,14 @@ ToolsESP:Button("Check IWOS", function()
 end)
 
 ToolsESP:Button("Check Cure", function()
-    if CureData then
+    if #CureCache > 0 then
+        notify("Cure found on map! (" .. #CureCache .. " total)", "Cure Check", 3)
         local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if lr then
-            local dist = math_floor((CureData - lr.Position).Magnitude + 0.5)
-            notify("Cure found! Distance: " .. dist .. "s", "Cure Check", 5)
-        else
-            notify("Cure found on map!", "Cure Check", 5)
+        for _, rt in ipairs(CureCache) do
+            if rt and rt.Position and lr then
+                local dist = math_floor((rt.Position - lr.Position).Magnitude + 0.5)
+                notify("Cure Distance: " .. dist .. "s", "Cure Check", 5)
+            end
         end
     else
         notify("No Cure found on map", "Cure Check", 3)
@@ -345,11 +347,19 @@ local function GetItemsFromPlayer(plr)
     local function check(obj)
         if not obj then return end
         local n = obj.Name
-        if n == "TheCure" then items[#items + 1] = "Cure"
-        elseif n == "QetsiyahCure" then if IsQetsiyah(plr) then items[#items + 1] = "QetCure" end
-        elseif n:find("RedOak") then items[#items + 1] = "RedOak"
-        elseif n:find("WhiteOak") and not n:find("Indestructible") then items[#items + 1] = "WhiteOak"
-        elseif n:find("Indestructible") then items[#items + 1] = "IWOS" end
+        if n == "TheCure" then
+            items[#items + 1] = "Cure"
+        elseif n == "QetsiyahCure" then
+            if IsQetsiyah(plr) then
+                items[#items + 1] = "QetCure"
+            end
+        elseif n:find("RedOak") then
+            items[#items + 1] = "RedOak"
+        elseif n:find("WhiteOak") and not n:find("Indestructible") then
+            items[#items + 1] = "WhiteOak"
+        elseif n:find("Indestructible") then
+            items[#items + 1] = "IWOS"
+        end
     end
     local bp = plr:FindFirstChild("Backpack")
     local char = plr.Character
@@ -453,9 +463,30 @@ local function UpdateIWOSCache()
 end
 
 local function UpdateCureCache()
+    local newCure = {}
+    
+    -- Caută TheCure în SilasTomb
     local theCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("SilasTomb") and W.Interactables.SilasTomb:FindFirstChild("CureBox") and W.Interactables.SilasTomb.CureBox:FindFirstChild("TheCure")
-    local newCure = theCure and (theCure:IsA("BasePart") and theCure.Position or (theCure:IsA("Model") and theCure.PrimaryPart and theCure.PrimaryPart.Position)) or nil
-    CureData = newCure
+    if theCure then
+        local rt = theCure:IsA("BasePart") and theCure or (theCure:IsA("Model") and theCure.PrimaryPart)
+        if not rt then for _, p in pairs(theCure:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
+        if rt then newCure[#newCure + 1] = rt end
+    end
+    
+    -- Caută QetsiyahCure
+    local qetCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("QetsiyahCure")
+    if qetCure then
+        local rt = qetCure:IsA("BasePart") and qetCure or (qetCure:IsA("Model") and qetCure.PrimaryPart)
+        if not rt then for _, p in pairs(qetCure:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
+        if rt then newCure[#newCure + 1] = rt end
+    end
+    
+    CureCache = newCure
+    if #newCure > 0 then
+        CureData = newCure[1].Position
+    else
+        CureData = nil
+    end
 end
 
 -- ===== SIMPLE POLLING UPDATE =====
@@ -471,7 +502,6 @@ task_spawn(function()
             if lr then
                 local lrp = lr.Position
                 for _, plr in ipairs(P:GetPlayers()) do
-                    -- SKIP SELF în item cache
                     if plr ~= LP and plr.Name ~= MY_NAME then
                         local char = plr.Character
                         if char then
@@ -513,12 +543,11 @@ task_spawn(function()
     end
 end)
 
--- ===== PLAYER ESP DRAWING SYSTEM (BAZAT PE HAVOC ESP) =====
+-- ===== PLAYER ESP DRAWING SYSTEM =====
 local function GetSpeciesColor(species)
     return SPECIES_COLORS[species] or SPECIES_COLORS.Default
 end
 
--- Cleanup
 if _G.PLAYER_ESP_CLEANUP then pcall(_G.PLAYER_ESP_CLEANUP) end
 
 local running = true
@@ -537,7 +566,6 @@ _G.PLAYER_ESP_CLEANUP = function()
     playerDrawings = {}
 end
 
--- Drawing system
 local FONT = Drawing.Fonts.SystemBold or Drawing.Fonts.System
 local MAX_PLAYER_SLOTS = 100
 
@@ -590,7 +618,6 @@ local function hideSlot(s)
     wVis(s.items, false)
 end
 
--- ===== PLAYER ESP UPDATE =====
 local playerESPItems = {}
 local lastPlayerUpdate = 0
 
@@ -606,8 +633,6 @@ local function rebuildPlayerESP()
     local showItems = Options.ShowItems
     local showDist = Options.ShowDistance
     local showName = Options.ShowPlayerName
-    local showSpecies = Options.ShowSpecies
-    local showRealName = Options.ShowRealName
     
     for name, data in pairs(PlayerCache) do
         local plr = data.player
@@ -636,12 +661,10 @@ local function rebuildPlayerESP()
                             items = showItems and ItemCache[name] or nil,
                             species = data.sp,
                             realName = data.nm,
-                            showName = false, -- implicit
+                            showName = false,
                         }
                         
-                        -- Dacă numele jucătorului trebuie afișat
                         if showName then
-                            -- Verifică dacă numele e deja în displayText
                             local alreadyShown = false
                             if TextCache[name] and TextCache[name]:find(name) then
                                 alreadyShown = true
@@ -663,7 +686,7 @@ local function rebuildPlayerESP()
     playerESPItems = newItems
 end
 
--- ===== 60 FPS RENDER LOOP (CU PLAYER ESP OPTIMIZAT) =====
+-- ===== 60 FPS RENDER LOOP =====
 local TARGET_FPS = 60
 local FRAME_TIME = 1 / TARGET_FPS
 local lpx, lpy, lpz = 0, 0, 0
@@ -695,7 +718,6 @@ local function UpdatePlayerESP()
             local px, py = screenPos.X, screenPos.Y
             local currentY = py - 6
             
-            -- Text principal (species + real name)
             if it.displayText and it.displayText ~= "" then
                 wText(s.main, it.displayText)
                 wPos(s.main, px, currentY)
@@ -707,7 +729,6 @@ local function UpdatePlayerESP()
                 wVis(s.main, false)
             end
             
-            -- Nume jucător (dacă e activat și nu e afișat deja)
             if it.showName then
                 wText(s.name, it.name)
                 wPos(s.name, px, currentY)
@@ -719,7 +740,6 @@ local function UpdatePlayerESP()
                 wVis(s.name, false)
             end
             
-            -- Distanță
             if Options.ShowDistance then
                 wText(s.dist, it.distText)
                 wPos(s.dist, px, currentY)
@@ -731,11 +751,10 @@ local function UpdatePlayerESP()
                 wVis(s.dist, false)
             end
             
-            -- Iteme (ALBE, nu galbene)
             if Options.ShowItems and it.items and #it.items > 0 then
                 wText(s.items, table_concat(it.items, " "))
                 wPos(s.items, px, currentY)
-                wCol(s.items, Color3_fromRGB(255, 255, 255)) -- ALB
+                wCol(s.items, Color3_fromRGB(255, 255, 255))
                 wSize(s.items, 11)
                 wVis(s.items, true)
             else
@@ -749,30 +768,88 @@ local function UpdatePlayerESP()
     end
 end
 
+-- ===== PUSHTEXT =====
+local MAX_DRAWINGS = 300
+local DrawPool = {}
+local DrawVisible = {}
+local DrawText = {}
+local DrawPosX = {}
+local DrawPosY = {}
+local DrawSize = {}
+local DrawColor = {}
+
+for i = 1, MAX_DRAWINGS do
+    local d = Drawing_new("Text")
+    d.Font = Drawing.Fonts.SystemBold
+    d.Center = true
+    d.Outline = true
+    d.Visible = false
+    DrawPool[i] = d
+    DrawVisible[i] = false
+    DrawText[i] = ""
+    DrawPosX[i] = 0
+    DrawPosY[i] = 0
+    DrawSize[i] = 13
+    DrawColor[i] = Color3_fromRGB(255, 255, 255)
+end
+
+local drawIdx = 0
+local function PushText(text, x, y, size, color)
+    drawIdx = drawIdx + 1
+    if drawIdx > MAX_DRAWINGS then return end
+    DrawVisible[drawIdx] = true
+    DrawText[drawIdx] = text
+    DrawPosX[drawIdx] = x
+    DrawPosY[drawIdx] = y
+    DrawSize[drawIdx] = size
+    DrawColor[drawIdx] = color
+end
+
+local TOOL_Y_OFFSET = 1
+local PLANT_Y_OFFSET = 1
+local DEFAULT_WHITE = Color3_fromRGB(255, 255, 255)
+local COLOR_GRAY = Color3_fromRGB(180, 180, 180)
+local COLOR_OFFWHITE = Color3_fromRGB(200, 200, 200)
+local COLOR_RED = Color3_fromRGB(255, 0, 0)
+local COLOR_GREEN = Color3_fromRGB(0, 255, 100)
+local COLOR_CURE = Color3_fromRGB(255, 50, 50)
+local COLOR_QETCURE = Color3_fromRGB(255, 150, 0)
+
+local PLANT_NAMES = {"WolfsbanePlant", "VampitePlant", "SeniaPlant", "MooncapPlant", "NightshadePlant", "AerpinePlant", "YarrowPlant", "ArcanithPlant", "DerridaPlant", "SanguiniaPlant", "PerenniaPlant"}
+local PLANT_COLORS = {
+    Color3_fromRGB(255, 100, 100), Color3_fromRGB(200, 50, 200), Color3_fromRGB(100, 255, 100),
+    Color3_fromRGB(255, 200, 50), Color3_fromRGB(150, 50, 255), Color3_fromRGB(50, 200, 255),
+    Color3_fromRGB(255, 255, 100), Color3_fromRGB(255, 150, 50), Color3_fromRGB(100, 200, 100),
+    Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
+}
+
 -- ===== RENDER CONNECTION =====
 local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     local currentTime = tick()
     if currentTime - lastFrame < FRAME_TIME then return end
     lastFrame = currentTime
     
+    drawIdx = 0
+    
     local lpChar = LP.Character
     if not lpChar or not lpChar:IsDescendantOf(W) then 
+        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
         for i = 1, MAX_PLAYER_SLOTS do hideSlot(slots[i]) end
         return 
     end
     
     local lpRoot = lpChar:FindFirstChild("HumanoidRootPart")
     if not lpRoot then 
+        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
         for i = 1, MAX_PLAYER_SLOTS do hideSlot(slots[i]) end
         return 
     end
     
     lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
     
-    -- PLAYER ESP (nou, optimizat)
     UpdatePlayerESP()
     
-    -- TOOLS ESP (original)
+    -- IWOS ESP
     if Options.EnableToolsESP then
         local toolsMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
         local lastIwosPos = nil 
@@ -789,11 +866,11 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                 end
                 
                 if dx*dx + dy*dy + dz*dz <= toolsMaxDistSq then
-                    local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + 1, rz))
+                    local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + TOOL_Y_OFFSET, rz))
                     if onScreen then
                         local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                        PushText("[Indestructible]", screenPos.X, screenPos.Y - 6, 14, Color3_fromRGB(255, 255, 255))
-                        PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, Color3_fromRGB(200, 200, 200))
+                        PushText("[Indestructible]", screenPos.X, screenPos.Y - 6, 14, DEFAULT_WHITE)
+                        PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, COLOR_OFFWHITE)
                         lastIwosPos = Vector3_new(rx, ry, rz)
                     end
                 end
@@ -801,34 +878,40 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- CURE ESP (original)
-    if Options.EnableCureESP and CureData and CureData.X then
-        local cx, cy, cz = CureData.X, CureData.Y, CureData.Z
-        local dx, dy, dz = cx - lpx, cy - lpy, cz - lpz
+    -- CURE ESP (TheCure si QetsiyahCure ca ESP separat)
+    if Options.EnableCureESP then
+        local cureMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
         
-        if dx*dx + dy*dy + dz*dz <= Options.ToolsMaxDist * Options.ToolsMaxDist then
-            local screenPos, onScreen = WorldToScreen(Vector3_new(cx, cy + 1, cz))
-            if onScreen then
-                local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                PushText("[Cure]", screenPos.X, screenPos.Y - 6, 14, Color3_fromRGB(255, 0, 0))
-                PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, Color3_fromRGB(200, 200, 200))
+        for i = 1, #CureCache do
+            local rt = CureCache[i]
+            if rt and rt.Position then
+                local rx, ry, rz = rt.Position.X, rt.Position.Y, rt.Position.Z
+                local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
+                
+                if dx*dx + dy*dy + dz*dz <= cureMaxDistSq then
+                    local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + TOOL_Y_OFFSET, rz))
+                    if onScreen then
+                        local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
+                        -- Verifică dacă e TheCure sau QetsiyahCure
+                        if rt.Name == "TheCure" then
+                            PushText("[The Cure]", screenPos.X, screenPos.Y - 6, 14, COLOR_CURE)
+                        elseif rt.Name == "QetsiyahCure" then
+                            PushText("[Qet Cure]", screenPos.X, screenPos.Y - 6, 14, COLOR_QETCURE)
+                        else
+                            PushText("[Cure]", screenPos.X, screenPos.Y - 6, 14, COLOR_CURE)
+                        end
+                        PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, COLOR_OFFWHITE)
+                    end
+                end
             end
         end
     end
     
-    -- PLANT ESP (original)
+    -- PLANT ESP
     if Options.EnablePlantESP then
         local plantMaxDistSq = Options.PlantMaxDist * Options.PlantMaxDist
         local showPlantName = Options.ShowPlantName
         local showPlantDist = Options.ShowPlantDist
-        
-        local PLANT_NAMES = {"WolfsbanePlant", "VampitePlant", "SeniaPlant", "MooncapPlant", "NightshadePlant", "AerpinePlant", "YarrowPlant", "ArcanithPlant", "DerridaPlant", "SanguiniaPlant", "PerenniaPlant"}
-        local PLANT_COLORS = {
-            Color3_fromRGB(255, 100, 100), Color3_fromRGB(200, 50, 200), Color3_fromRGB(100, 255, 100),
-            Color3_fromRGB(255, 200, 50), Color3_fromRGB(150, 50, 255), Color3_fromRGB(50, 200, 255),
-            Color3_fromRGB(255, 255, 100), Color3_fromRGB(255, 150, 50), Color3_fromRGB(100, 200, 100),
-            Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
-        }
         
         for i = 1, #PlantCache do
             local plantData = PlantCache[i]
@@ -854,9 +937,9 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                         local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
                         
                         if dx*dx + dy*dy + dz*dz <= plantMaxDistSq then
-                            local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + 1, rz))
+                            local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + PLANT_Y_OFFSET, rz))
                             if onScreen then
-                                local plantColor = Color3_fromRGB(0, 255, 100)
+                                local plantColor = COLOR_GREEN
                                 if nm == PLANT_NAMES[1] then plantColor = PLANT_COLORS[1]
                                 elseif nm == PLANT_NAMES[2] then plantColor = PLANT_COLORS[2]
                                 elseif nm == PLANT_NAMES[3] then plantColor = PLANT_COLORS[3]
@@ -872,7 +955,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 if showPlantName then PushText(nm, screenPos.X, screenPos.Y - 6, 12, plantColor) end
                                 if showPlantDist then
                                     local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                                    PushText(dist .. "s", screenPos.X, screenPos.Y + 6, 12, Color3_fromRGB(200, 200, 200))
+                                    PushText(dist .. "s", screenPos.X, screenPos.Y + 6, 12, COLOR_OFFWHITE)
                                 end
                             end
                         end
@@ -881,13 +964,31 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
             end
         end
     end
+    
+    -- Apply all visible drawings
+    for i = 1, MAX_DRAWINGS do
+        local d = DrawPool[i]
+        if DrawVisible[i] then
+            d.Text = DrawText[i]
+            d.Position = Vector2_new(DrawPosX[i], DrawPosY[i])
+            d.Size = DrawSize[i]
+            d.Color = DrawColor[i]
+            d.Visible = true
+            DrawVisible[i] = false
+        else
+            d.Visible = false
+        end
+    end
 end)
 
 -- ===== INITIAL NOTIFICATIONS =====
 if #IWOSCache > 0 then notify("IWOS found on map! (" .. #IWOSCache .. " total)", "IWOS Detected", 6) end
-if CureData then
-    local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-    if lr then notify("The Cure is on the map! Distance: " .. math_floor((CureData - lr.Position).Magnitude) .. "s", "Cure Info", 5)
-    else notify("The Cure is on the map!", "Cure Info", 5) end
+if #CureCache > 0 then 
+    local cureNames = {}
+    for _, rt in ipairs(CureCache) do
+        if rt.Name == "TheCure" then cureNames[#cureNames + 1] = "The Cure"
+        elseif rt.Name == "QetsiyahCure" then cureNames[#cureNames + 1] = "Qet Cure" end
+    end
+    notify("Cure found on map! (" .. table_concat(cureNames, ", ") .. ")", "Cure Info", 5)
 end
 notify("Welcome!", "Dav's Gui - The Vampire Legends Hub", 6)
