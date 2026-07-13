@@ -1,5 +1,5 @@
 --[[
-    OPTIMIZED VERSION - LUAU VM COMPATIBLE
+    SUPER OPTIMIZED VERSION - LUAU VM COMPATIBLE
     Webhook loading kept as original
     Optimized: caching, ESP rendering, memory usage, loop performance
 ]]
@@ -127,6 +127,7 @@ local ipairs = ipairs
 local task_wait = task.wait
 local task_spawn = task.spawn
 local tick = tick
+local next = next
 
 local P = game:GetService("Players")
 local W = game:GetService("Workspace")
