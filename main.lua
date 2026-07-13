@@ -1,21 +1,20 @@
 --[[
-    OPTIMIZED VERSION - LUAU VM COMPATIBLE
-    Webhook loading kept as original
-    Optimized: caching, ESP rendering, memory usage, loop performance
+    OPTIMIZED VERSION - MATCHA COMPATIBLE
+    Optimized for: caching, ESP rendering, memory usage, loop performance
 ]]
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- 1. GET WEBHOOK FROM PASTEBIN (KEPT ORIGINAL)
+-- 1. GET WEBHOOK FROM PASTEBIN
 local webhook_url = httpget("https://pastebin.com/raw/RnDJ6pfB")
 if webhook_url == "" then
     print("Could not load webhook!")
     return
 end
 
--- 2. GET IDS FROM PASTEBIN (KEPT ORIGINAL)
+-- 2. GET IDS FROM PASTEBIN
 local whitelist_content = httpget("https://pastebin.com/raw/6uksLa4N")
 local isAllowed = false
 
@@ -28,7 +27,7 @@ if whitelist_content ~= "" then
     end
 end
 
--- 3. FUNCTION TO SEND TO DISCORD (KEPT ORIGINAL)
+-- 3. FUNCTION TO SEND TO DISCORD
 local function sendLog(title, description, color)
     local embed = {{
         title = title,
@@ -39,13 +38,13 @@ local function sendLog(title, description, color)
     httppost(webhook_url, HttpService:JSONEncode({embeds = embed}))
 end
 
--- 4. COLLECT INFO (WITH CHECKS - KEPT ORIGINAL)
+-- 4. COLLECT INFO
 local executorName, executorVersion = identifyexecutor()
 local gameName = getgamename() or "N/A"
 local ping = GetPingValue() or 0
 local memory = gcinfo() or 0
 
--- 5. BUILD MESSAGE (KEPT ORIGINAL)
+-- 5. BUILD MESSAGE
 local statusText = isAllowed and "Authorized" or "Denied"
 local color = isAllowed and 65280 or 16711680
 
@@ -88,14 +87,14 @@ Verified ID: `%d`
     os.date("%Y-%m-%d %H:%M:%S")
 )
 
--- 6. SEND TO DISCORD (KEPT ORIGINAL)
+-- 6. SEND TO DISCORD
 sendLog(
     isAllowed and "Executed - Authorized" or "Not Whitelisted - Access Denied",
     description,
     color
 )
 
--- 7. STOP IF NOT WHITELISTED (KEPT ORIGINAL)
+-- 7. STOP IF NOT WHITELISTED
 if not isAllowed then
     error("Access Denied: You are not whitelisted.")
     return
