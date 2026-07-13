@@ -1,4 +1,4 @@
--- Dav's Gui - The Vampire Legends Hub (Matcha Version) - FIXED (NO SELF ESP)
+-- Dav's Gui - The Vampire Legends Hub (Matcha Version) - CU PLAYER ESP OPTIMIZAT
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -142,6 +142,7 @@ local Options = {
     ShowSanguinia = true, ShowPerennia = true,
     IWOSNotifier = true, CureNotifier = true,
     StaffNotifier = true, NotifDuration = 5,
+    UpdateRate = 30,
 }
 
 -- ===== DICTIONARIES =====
@@ -171,6 +172,30 @@ local S = {
     Original = "Original",
     Tribrid = "Tribrid",
     Possessed = "Possessed"
+}
+
+-- ===== SPECIES COLORS =====
+local SPECIES_COLORS = {
+    Vampire = Color3_fromRGB(196, 30, 58),
+    Werewolf = Color3_fromRGB(249, 228, 103),
+    Witch = Color3_fromRGB(195, 145, 195),
+    Original = Color3_fromRGB(154, 42, 42),
+    Hybrid = Color3_fromRGB(245, 185, 102),
+    Heretic = Color3_fromRGB(188, 101, 169),
+    Mortal = Color3_fromRGB(193, 225, 193),
+    Phoenix = Color3_fromRGB(223, 129, 96),
+    Hunter = Color3_fromRGB(120, 199, 114),
+    Tribrid = Color3_fromRGB(182, 208, 226),
+    Immortal = Color3_fromRGB(126, 53, 248),
+    Siphoner = Color3_fromRGB(114, 147, 202),
+    Muse = Color3_fromRGB(254, 194, 14),
+    Fairy = Color3_fromRGB(254, 194, 14),
+    Werewitch = Color3_fromRGB(201, 69, 150),
+    Firstblood = Color3_fromRGB(178, 58, 64),
+    Triblood = Color3_fromRGB(135, 206, 235),
+    Bloodwitch = Color3_fromRGB(188, 101, 169),
+    Possessed = Color3_fromRGB(255, 215, 0),
+    Default = Color3_fromRGB(255, 255, 255),
 }
 
 -- ===== NOTIFICATION =====
@@ -234,6 +259,7 @@ win:AddSettingsTab("cog")
 local PlayerESP = Visuals:Section("Player ESP", "Left")
 PlayerESP:Toggle("Enable Player ESP", Options.EnablePlayerESP, function(on) Options.EnablePlayerESP = on; notify("Player ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
 PlayerESP:Slider("Max Distance", Options.MaxDist, 500, 500, 5000, "s", function(v) Options.MaxDist = v end)
+PlayerESP:Slider("Update Rate (FPS)", Options.UpdateRate, 10, 5, 60, "fps", function(v) Options.UpdateRate = v end)
 
 local ToolsESP = Visuals:Section("Tools ESP", "Left")
 ToolsESP:Toggle("Enable IWOS ESP", Options.EnableToolsESP, function(on) Options.EnableToolsESP = on; notify("IWOS ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
@@ -393,27 +419,7 @@ local function UpdatePlayerCache()
                         sp = "Witch"
                     end
                     
-                    local color = Color3_fromRGB(255, 255, 255)
-                    if sp == "Vampire" then color = Color3_fromRGB(196, 30, 58)
-                    elseif sp == "Werewolf" then color = Color3_fromRGB(249, 228, 103)
-                    elseif sp == "Witch" then color = Color3_fromRGB(195, 145, 195)
-                    elseif sp == "Original" then color = Color3_fromRGB(255, 0, 0)
-                    elseif sp == "Hybrid" then color = Color3_fromRGB(245, 185, 102)
-                    elseif sp == "Heretic" then color = Color3_fromRGB(188, 101, 169)
-                    elseif sp == "Mortal" then color = Color3_fromRGB(193, 225, 193)
-                    elseif sp == "Phoenix" then color = Color3_fromRGB(223, 129, 96)
-                    elseif sp == "Hunter" then color = Color3_fromRGB(120, 199, 114)
-                    elseif sp == "Tribrid" then color = Color3_fromRGB(182, 208, 226)
-                    elseif sp == "Immortal" then color = Color3_fromRGB(126, 53, 248)
-                    elseif sp == "Siphoner" then color = Color3_fromRGB(114, 147, 202)
-                    elseif sp == "Muse" then color = Color3_fromRGB(254, 194, 14)
-                    elseif sp == "Fairy" then color = Color3_fromRGB(254, 194, 14)
-                    elseif sp == "Werewitch" then color = Color3_fromRGB(201, 69, 150)
-                    elseif sp == "Firstblood" then color = Color3_fromRGB(255, 0, 0)
-                    elseif sp == "Triblood" then color = Color3_fromRGB(135, 206, 235)
-                    elseif sp == "Bloodwitch" then color = Color3_fromRGB(188, 101, 169)
-                    elseif sp == "Possessed" then color = Color3_fromRGB(255, 215, 0)
-                    end
+                    local color = SPECIES_COLORS[sp] or SPECIES_COLORS.Default
                     
                     new[plr.Name] = {sp = sp, nm = nm, color = color, player = plr}
                     
@@ -507,178 +513,266 @@ task_spawn(function()
     end
 end)
 
--- ===== ULTRA FAST RENDER SYSTEM =====
-local MAX_DRAWINGS = 300
-local DrawPool = {}
-local DrawVisible = {}
-local DrawText = {}
-local DrawPosX = {}
-local DrawPosY = {}
-local DrawSize = {}
-local DrawColor = {}
-
-for i = 1, MAX_DRAWINGS do
-    local d = Drawing_new("Text")
-    d.Font = Drawing.Fonts.SystemBold
-    d.Center = true
-    d.Outline = true
-    d.Visible = false
-    DrawPool[i] = d
-    DrawVisible[i] = false
-    DrawText[i] = ""
-    DrawPosX[i] = 0
-    DrawPosY[i] = 0
-    DrawSize[i] = 13
-    DrawColor[i] = Color3_fromRGB(255, 255, 255)
+-- ===== PLAYER ESP DRAWING SYSTEM (BAZAT PE HAVOC ESP) =====
+local function GetSpeciesColor(species)
+    return SPECIES_COLORS[species] or SPECIES_COLORS.Default
 end
 
-local drawIdx = 0
-local function PushText(text, x, y, size, color)
-    drawIdx = drawIdx + 1
-    if drawIdx > MAX_DRAWINGS then return end
-    DrawVisible[drawIdx] = true
-    DrawText[drawIdx] = text
-    DrawPosX[drawIdx] = x
-    DrawPosY[drawIdx] = y
-    DrawSize[drawIdx] = size
-    DrawColor[drawIdx] = color
+-- Cleanup
+if _G.PLAYER_ESP_CLEANUP then pcall(_G.PLAYER_ESP_CLEANUP) end
+
+local running = true
+local playerDrawings = {}
+local renderConn = nil
+
+_G.PLAYER_ESP_CLEANUP = function()
+    running = false
+    if renderConn then
+        pcall(function() renderConn:Disconnect() end)
+        renderConn = nil
+    end
+    for obj in pairs(playerDrawings) do
+        pcall(function() obj:Remove() end)
+    end
+    playerDrawings = {}
 end
 
--- Pre-computed constants
-local TOOL_Y_OFFSET = 1
-local PLANT_Y_OFFSET = 1
-local DEFAULT_WHITE = Color3_fromRGB(255, 255, 255)
-local COLOR_GRAY = Color3_fromRGB(180, 180, 180)
-local COLOR_OFFWHITE = Color3_fromRGB(200, 200, 200)
-local COLOR_RED = Color3_fromRGB(255, 0, 0)
-local COLOR_GREEN = Color3_fromRGB(0, 255, 100)
-local COLOR_GOLD = Color3_fromRGB(255, 215, 0)
+-- Drawing system
+local FONT = Drawing.Fonts.SystemBold or Drawing.Fonts.System
+local MAX_PLAYER_SLOTS = 100
 
-local PLANT_NAMES = {"WolfsbanePlant", "VampitePlant", "SeniaPlant", "MooncapPlant", "NightshadePlant", "AerpinePlant", "YarrowPlant", "ArcanithPlant", "DerridaPlant", "SanguiniaPlant", "PerenniaPlant"}
-local PLANT_COLORS = {
-    Color3_fromRGB(255, 100, 100), Color3_fromRGB(200, 50, 200), Color3_fromRGB(100, 255, 100),
-    Color3_fromRGB(255, 200, 50), Color3_fromRGB(150, 50, 255), Color3_fromRGB(50, 200, 255),
-    Color3_fromRGB(255, 255, 100), Color3_fromRGB(255, 150, 50), Color3_fromRGB(100, 200, 100),
-    Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
-}
+local function newText(color)
+    local t = Drawing.new("Text")
+    t.Size = 13
+    t.Center = true
+    t.Outline = true
+    t.Font = FONT
+    t.Color = color or Color3.new(1, 1, 1)
+    t.Visible = false
+    playerDrawings[t] = true
+    return t
+end
 
--- ===== 60 FPS RENDER LOOP (FĂRĂ SELF ESP) =====
-local TARGET_FPS = 60
-local FRAME_TIME = 1 / TARGET_FPS
-local lpx, lpy, lpz = 0, 0, 0
-local lastFrame = 0
+local function wrap(o) return { o = o } end
 
-local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
-    local currentTime = tick()
-    if currentTime - lastFrame < FRAME_TIME then return end
-    lastFrame = currentTime
-    
-    drawIdx = 0
-    
-    local lpChar = LP.Character
-    if not lpChar or not lpChar:IsDescendantOf(W) then 
-        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end 
-        return 
-    end
-    
-    local lpRoot = lpChar:FindFirstChild("HumanoidRootPart")
-    if not lpRoot then 
-        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end 
-        return 
-    end
-    
-    lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
+local function wVis(w, v)
+    if w.vis ~= v then w.o.Visible = v; w.vis = v end
+end
+local function wCol(w, v)
+    if w.col ~= v then w.o.Color = v; w.col = v end
+end
+local function wPos(w, x, y)
+    if w.px ~= x or w.py ~= y then w.o.Position = Vector2.new(x, y); w.px = x; w.py = y end
+end
+local function wText(w, s)
+    if w.txt ~= s then w.o.Text = s; w.txt = s end
+end
+local function wSize(w, s)
+    if w.sz ~= s then w.o.Size = s; w.sz = s end
+end
 
-    -- PLAYER ESP (FĂRĂ SELF)
-    if Options.EnablePlayerESP then
-        local maxDistSq = Options.MaxDist * Options.MaxDist
-        local showName  = Options.ShowPlayerName
-        local showDist  = Options.ShowDistance
-        local showItems = Options.ShowItems
-        
-        for name, data in pairs(PlayerCache) do
-            local plr = data.player
-            
-            -- VERIFICARE SELF - nu arăta propriul jucător
-            if plr and plr ~= LP and plr.Name ~= MY_NAME then
-                local char = plr.Character
-                if char then
-                    local head = char:FindFirstChild("Head")
-                    if head then
-                        local pos = head.Position
-                        local dx = pos.X - lpx; local dy = pos.Y - lpy; local dz = pos.Z - lpz
-                        local distSq = dx*dx + dy*dy + dz*dz
+local function newSlot()
+    return {
+        main   = wrap(newText(SPECIES_COLORS.Default)),
+        name   = wrap(newText(SPECIES_COLORS.Default)),
+        dist   = wrap(newText(SPECIES_COLORS.Default)),
+        items  = wrap(newText(SPECIES_COLORS.Default)),
+    }
+end
+
+local slots = {}
+for i = 1, MAX_PLAYER_SLOTS do slots[i] = newSlot() end
+
+local function hideSlot(s)
+    wVis(s.main, false)
+    wVis(s.name, false)
+    wVis(s.dist, false)
+    wVis(s.items, false)
+end
+
+-- ===== PLAYER ESP UPDATE =====
+local playerESPItems = {}
+local lastPlayerUpdate = 0
+
+local function rebuildPlayerESP()
+    local maxDist = Options.MaxDist
+    local maxDistSq = maxDist * maxDist
+    
+    local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+    if not lr then return end
+    
+    local lpx, lpy, lpz = lr.Position.X, lr.Position.Y, lr.Position.Z
+    local newItems = {}
+    local showItems = Options.ShowItems
+    local showDist = Options.ShowDistance
+    local showName = Options.ShowPlayerName
+    local showSpecies = Options.ShowSpecies
+    local showRealName = Options.ShowRealName
+    
+    for name, data in pairs(PlayerCache) do
+        local plr = data.player
+        if plr and plr ~= LP and plr.Name ~= MY_NAME then
+            local char = plr.Character
+            if char then
+                local head = char:FindFirstChild("Head")
+                if head then
+                    local pos = head.Position
+                    local dx = pos.X - lpx
+                    local dy = pos.Y - lpy
+                    local dz = pos.Z - lpz
+                    local distSq = dx*dx + dy*dy + dz*dz
+                    
+                    if distSq <= maxDistSq then
+                        local dist = math.floor(math.sqrt(distSq) + 0.5)
+                        local distText = "[" .. tostring(dist) .. "]"
                         
-                        if distSq <= maxDistSq then
-                            local screenPos, onScreen = WorldToScreen(pos)
-                            if onScreen then
-                                local px, py = screenPos.X, screenPos.Y
-                                local currentY = py
-                                
-                                if BodyJumpedCache[name] then
-                                    PushText("[Body Jumped] " .. data.nm, px, currentY, 14, Color3_fromRGB(195, 145, 195))
-                                    currentY = currentY + 16
-                                else
-                                    local sp = data.sp
-                                    local color = Color3_fromRGB(255, 255, 255)
-                                    
-                                    if sp == "Vampire" then color = Color3_fromRGB(196, 30, 58)
-                                    elseif sp == "Werewolf" then color = Color3_fromRGB(249, 228, 103)
-                                    elseif sp == "Witch" then color = Color3_fromRGB(195, 145, 195)
-                                    elseif sp == "Original" then color = Color3_fromRGB(154, 42, 42)
-                                    elseif sp == "Hybrid" then color = Color3_fromRGB(245, 185, 102)
-                                    elseif sp == "Heretic" then color = Color3_fromRGB(188, 101, 169)
-                                    elseif sp == "Mortal" then color = Color3_fromRGB(193, 225, 193)
-                                    elseif sp == "Phoenix" then color = Color3_fromRGB(223, 129, 96)
-                                    elseif sp == "Hunter" then color = Color3_fromRGB(120, 199, 114)
-                                    elseif sp == "Tribrid" then color = Color3_fromRGB(182, 208, 226)
-                                    elseif sp == "Immortal" then color = Color3_fromRGB(126, 53, 248)
-                                    elseif sp == "Siphoner" then color = Color3_fromRGB(114, 147, 202)
-                                    elseif sp == "Muse" then color = Color3_fromRGB(254, 194, 14)
-                                    elseif sp == "Fairy" then color = Color3_fromRGB(254, 194, 14)
-                                    elseif sp == "Werewitch" then color = Color3_fromRGB(201, 69, 150)
-                                    elseif sp == "Firstblood" then color = Color3_fromRGB(178, 58, 64)
-                                    elseif sp == "Triblood" then color = Color3_fromRGB(135, 206, 235)
-                                    elseif sp == "Bloodwitch" then color = Color3_fromRGB(188, 101, 169)
-                                    elseif sp == "Possessed" then color = Color3_fromRGB(255, 215, 0)
-                                    end
-                                    
-                                    local cachedText = TextCache[name]
-                                    if cachedText then 
-                                        PushText(cachedText, px, currentY, 14, color) 
-                                        currentY = currentY + 16 
-                                    end
-                                end
-                                
-                                if showName then
-                                    local cachedText = TextCache[name]
-                                    if not cachedText or not cachedText:find(name) then
-                                        PushText(name, px, currentY, 14, COLOR_GRAY)
-                                        currentY = currentY + 16
-                                    end
-                                end
-                                
-                                if showDist then
-                                    local dist = math_floor(math.sqrt(distSq) + 0.5)
-                                    PushText("[" .. tostring(dist) .. "]", px, currentY, 12, COLOR_GRAY)
-                                    currentY = currentY + 14
-                                end
-                                
-                                if showItems then
-                                    local items = ItemCache[name]
-                                    if items and #items > 0 then 
-                                        PushText(table_concat(items, " "), px, currentY, 11, COLOR_GRAY) 
-                                    end
-                                end
+                        local entry = {
+                            name = name,
+                            displayText = TextCache[name] or name,
+                            distText = distText,
+                            headPos = pos,
+                            color = data.color,
+                            isBodyJumped = BodyJumpedCache[name] or false,
+                            items = showItems and ItemCache[name] or nil,
+                            species = data.sp,
+                            realName = data.nm,
+                            showName = false, -- implicit
+                        }
+                        
+                        -- Dacă numele jucătorului trebuie afișat
+                        if showName then
+                            -- Verifică dacă numele e deja în displayText
+                            local alreadyShown = false
+                            if TextCache[name] and TextCache[name]:find(name) then
+                                alreadyShown = true
+                            end
+                            if not alreadyShown then
+                                entry.showName = true
                             end
                         end
+                        
+                        newItems[#newItems + 1] = entry
+                        
+                        if #newItems >= MAX_PLAYER_SLOTS then break end
                     end
                 end
             end
         end
     end
     
-    -- TOOLS ESP
+    playerESPItems = newItems
+end
+
+-- ===== 60 FPS RENDER LOOP (CU PLAYER ESP OPTIMIZAT) =====
+local TARGET_FPS = 60
+local FRAME_TIME = 1 / TARGET_FPS
+local lpx, lpy, lpz = 0, 0, 0
+local lastFrame = 0
+
+local function UpdatePlayerESP()
+    if not Options.EnablePlayerESP then
+        for i = 1, MAX_PLAYER_SLOTS do hideSlot(slots[i]) end
+        return
+    end
+    
+    local now = tick()
+    local rate = Options.UpdateRate or 30
+    if (now - lastPlayerUpdate) >= (1 / math.max(1, rate)) then
+        lastPlayerUpdate = now
+        rebuildPlayerESP()
+    end
+    
+    local slot = 0
+    
+    for _, it in ipairs(playerESPItems) do
+        if slot >= MAX_PLAYER_SLOTS then break end
+        
+        local screenPos, onScreen = WorldToScreen(it.headPos)
+        if onScreen then
+            slot = slot + 1
+            local s = slots[slot]
+            
+            local px, py = screenPos.X, screenPos.Y
+            local currentY = py - 6
+            
+            -- Text principal (species + real name)
+            if it.displayText and it.displayText ~= "" then
+                wText(s.main, it.displayText)
+                wPos(s.main, px, currentY)
+                wCol(s.main, it.color)
+                wSize(s.main, 14)
+                wVis(s.main, true)
+                currentY = currentY + 16
+            else
+                wVis(s.main, false)
+            end
+            
+            -- Nume jucător (dacă e activat și nu e afișat deja)
+            if it.showName then
+                wText(s.name, it.name)
+                wPos(s.name, px, currentY)
+                wCol(s.name, Color3_fromRGB(180, 180, 180))
+                wSize(s.name, 14)
+                wVis(s.name, true)
+                currentY = currentY + 16
+            else
+                wVis(s.name, false)
+            end
+            
+            -- Distanță
+            if Options.ShowDistance then
+                wText(s.dist, it.distText)
+                wPos(s.dist, px, currentY)
+                wCol(s.dist, Color3_fromRGB(180, 180, 180))
+                wSize(s.dist, 12)
+                wVis(s.dist, true)
+                currentY = currentY + 14
+            else
+                wVis(s.dist, false)
+            end
+            
+            -- Iteme (ALBE, nu galbene)
+            if Options.ShowItems and it.items and #it.items > 0 then
+                wText(s.items, table_concat(it.items, " "))
+                wPos(s.items, px, currentY)
+                wCol(s.items, Color3_fromRGB(255, 255, 255)) -- ALB
+                wSize(s.items, 11)
+                wVis(s.items, true)
+            else
+                wVis(s.items, false)
+            end
+        end
+    end
+    
+    for i = slot + 1, MAX_PLAYER_SLOTS do
+        hideSlot(slots[i])
+    end
+end
+
+-- ===== RENDER CONNECTION =====
+local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
+    local currentTime = tick()
+    if currentTime - lastFrame < FRAME_TIME then return end
+    lastFrame = currentTime
+    
+    local lpChar = LP.Character
+    if not lpChar or not lpChar:IsDescendantOf(W) then 
+        for i = 1, MAX_PLAYER_SLOTS do hideSlot(slots[i]) end
+        return 
+    end
+    
+    local lpRoot = lpChar:FindFirstChild("HumanoidRootPart")
+    if not lpRoot then 
+        for i = 1, MAX_PLAYER_SLOTS do hideSlot(slots[i]) end
+        return 
+    end
+    
+    lpx, lpy, lpz = lpRoot.Position.X, lpRoot.Position.Y, lpRoot.Position.Z
+    
+    -- PLAYER ESP (nou, optimizat)
+    UpdatePlayerESP()
+    
+    -- TOOLS ESP (original)
     if Options.EnableToolsESP then
         local toolsMaxDistSq = Options.ToolsMaxDist * Options.ToolsMaxDist
         local lastIwosPos = nil 
@@ -695,11 +789,11 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                 end
                 
                 if dx*dx + dy*dy + dz*dz <= toolsMaxDistSq then
-                    local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + TOOL_Y_OFFSET, rz))
+                    local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + 1, rz))
                     if onScreen then
                         local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                        PushText("[Indestructible]", screenPos.X, screenPos.Y - 6, 14, DEFAULT_WHITE)
-                        PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, COLOR_OFFWHITE)
+                        PushText("[Indestructible]", screenPos.X, screenPos.Y - 6, 14, Color3_fromRGB(255, 255, 255))
+                        PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, Color3_fromRGB(200, 200, 200))
                         lastIwosPos = Vector3_new(rx, ry, rz)
                     end
                 end
@@ -707,26 +801,34 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
         end
     end
     
-    -- CURE ESP
+    -- CURE ESP (original)
     if Options.EnableCureESP and CureData and CureData.X then
         local cx, cy, cz = CureData.X, CureData.Y, CureData.Z
         local dx, dy, dz = cx - lpx, cy - lpy, cz - lpz
         
         if dx*dx + dy*dy + dz*dz <= Options.ToolsMaxDist * Options.ToolsMaxDist then
-            local screenPos, onScreen = WorldToScreen(Vector3_new(cx, cy + TOOL_Y_OFFSET, cz))
+            local screenPos, onScreen = WorldToScreen(Vector3_new(cx, cy + 1, cz))
             if onScreen then
                 local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                PushText("[Cure]", screenPos.X, screenPos.Y - 6, 14, COLOR_RED)
-                PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, COLOR_OFFWHITE)
+                PushText("[Cure]", screenPos.X, screenPos.Y - 6, 14, Color3_fromRGB(255, 0, 0))
+                PushText(dist .. "s", screenPos.X, screenPos.Y + 8, 12, Color3_fromRGB(200, 200, 200))
             end
         end
     end
     
-    -- PLANT ESP
+    -- PLANT ESP (original)
     if Options.EnablePlantESP then
         local plantMaxDistSq = Options.PlantMaxDist * Options.PlantMaxDist
         local showPlantName = Options.ShowPlantName
         local showPlantDist = Options.ShowPlantDist
+        
+        local PLANT_NAMES = {"WolfsbanePlant", "VampitePlant", "SeniaPlant", "MooncapPlant", "NightshadePlant", "AerpinePlant", "YarrowPlant", "ArcanithPlant", "DerridaPlant", "SanguiniaPlant", "PerenniaPlant"}
+        local PLANT_COLORS = {
+            Color3_fromRGB(255, 100, 100), Color3_fromRGB(200, 50, 200), Color3_fromRGB(100, 255, 100),
+            Color3_fromRGB(255, 200, 50), Color3_fromRGB(150, 50, 255), Color3_fromRGB(50, 200, 255),
+            Color3_fromRGB(255, 255, 100), Color3_fromRGB(255, 150, 50), Color3_fromRGB(100, 200, 100),
+            Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
+        }
         
         for i = 1, #PlantCache do
             local plantData = PlantCache[i]
@@ -752,9 +854,9 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                         local dx, dy, dz = rx - lpx, ry - lpy, rz - lpz
                         
                         if dx*dx + dy*dy + dz*dz <= plantMaxDistSq then
-                            local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + PLANT_Y_OFFSET, rz))
+                            local screenPos, onScreen = WorldToScreen(Vector3_new(rx, ry + 1, rz))
                             if onScreen then
-                                local plantColor = COLOR_GREEN
+                                local plantColor = Color3_fromRGB(0, 255, 100)
                                 if nm == PLANT_NAMES[1] then plantColor = PLANT_COLORS[1]
                                 elseif nm == PLANT_NAMES[2] then plantColor = PLANT_COLORS[2]
                                 elseif nm == PLANT_NAMES[3] then plantColor = PLANT_COLORS[3]
@@ -770,28 +872,13 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                                 if showPlantName then PushText(nm, screenPos.X, screenPos.Y - 6, 12, plantColor) end
                                 if showPlantDist then
                                     local dist = math_floor((dx*dx + dy*dy + dz*dz)^0.5 + 0.5)
-                                    PushText(dist .. "s", screenPos.X, screenPos.Y + 6, 12, COLOR_OFFWHITE)
+                                    PushText(dist .. "s", screenPos.X, screenPos.Y + 6, 12, Color3_fromRGB(200, 200, 200))
                                 end
                             end
                         end
                     end
                 end
             end
-        end
-    end
-    
-    -- Apply all visible drawings
-    for i = 1, MAX_DRAWINGS do
-        local d = DrawPool[i]
-        if DrawVisible[i] then
-            d.Text = DrawText[i]
-            d.Position = Vector2_new(DrawPosX[i], DrawPosY[i])
-            d.Size = DrawSize[i]
-            d.Color = DrawColor[i]
-            d.Visible = true
-            DrawVisible[i] = false
-        else
-            d.Visible = false
         end
     end
 end)
