@@ -451,20 +451,21 @@ local function GetItemsFromPlayer(plr)
 end
 
 -- ===== CACHE UPDATE FUNCTIONS (OPTIMIZED) =====
-local function UpdatePlayerCache()
-    local fd = W:FindFirstChild("PlayerNameTagFolder")
-    if not fd then return end
+ local function UpdatePlayerCache()
     local new = {}
     local newTextCache = {}
-
     local bodyJumpedPlayers = {}
     local silasPlayers = {}
 
-    for _, p in ipairs(P:GetPlayers()) do
-        if p ~= LP and p.Name ~= MY_NAME then
+    -- Colectăm toți jucătorii body jumped și Silas
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player and p.Name ~= player.Name then
+            -- Verifică body jump
             if CheckIfBodyJumped(p) then
                 bodyJumpedPlayers[p.Name] = p
             end
+            
+            -- Verifică Silas
             local charName = p:GetAttribute("CharacterName")
             if charName == "The Trickster" or charName == "Silas" then
                 silasPlayers[p.Name] = p
@@ -481,158 +482,123 @@ local function UpdatePlayerCache()
         end
     end
 
-    for _, t in pairs(fd:GetChildren()) do
-        if t:IsA("BillboardGui") then
-            local tx = {}
-            for _, c in pairs(t:GetDescendants()) do
-                if c:IsA("TextLabel") and c.Text ~= "" then tx[#tx + 1] = c.Text end
-            end
-
-            if #tx >= 3 then
-                local rawSpecie = tx[1]
-                local charNameTag = tx[2]
-                local displayName = tx[3]
-
-                if displayName == MY_NAME then continue end
-
-                local plr = P:FindFirstChild(displayName)
-                local isBodyJumped = false
-                local isSilas = false
-
-                if not plr then
-                    for _, p in pairs(bodyJumpedPlayers) do
-                        local char = p.Character
-                        if char then
-                            local head = char:FindFirstChild("Head")
-                            if head then
-                                for _, bg in pairs(head:GetChildren()) do
-                                    if bg:IsA("BillboardGui") then
-                                        local labels = {}
-                                        for _, lbl in pairs(bg:GetDescendants()) do
-                                            if lbl:IsA("TextLabel") and lbl.Text ~= "" then
-                                                labels[#labels + 1] = lbl.Text
-                                            end
-                                        end
-                                        if #labels >= 3 and labels[3] == displayName then
-                                            plr = p
-                                            isBodyJumped = true
-                                            BodyJumpedCache[p.Name] = true
-                                            break
-                                        end
-                                    end
+    -- Căutăm prin toți jucătorii pentru BillboardGui-uri
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Name ~= player.Name then
+            local char = plr.Character
+            if char then
+                local head = char:FindFirstChild("Head")
+                if head then
+                    -- Caută BillboardGui-uri în Head
+                    for _, child in pairs(head:GetChildren()) do
+                        if child:IsA("BillboardGui") then
+                            local tx = {}
+                            for _, c in pairs(child:GetDescendants()) do
+                                if c:IsA("TextLabel") and c.Text ~= "" then
+                                    tx[#tx + 1] = c.Text
                                 end
                             end
-                        end
-                        if plr then break end
-                    end
 
-                    if not plr then
-                        for _, p in pairs(silasPlayers) do
-                            local char = p.Character
-                            if char then
-                                local head = char:FindFirstChild("Head")
-                                if head then
-                                    for _, bg in pairs(head:GetChildren()) do
-                                        if bg:IsA("BillboardGui") then
-                                            local labels = {}
-                                            for _, lbl in pairs(bg:GetDescendants()) do
-                                                if lbl:IsA("TextLabel") and lbl.Text ~= "" then
-                                                    labels[#labels + 1] = lbl.Text
-                                                end
-                                            end
-                                            if #labels >= 3 and labels[3] == displayName then
-                                                plr = p
-                                                isSilas = true
-                                                break
-                                            end
-                                        end
-                                    end
+                            if #tx >= 3 then
+                                local rawSpecie = tx[1]
+                                local charNameTag = tx[2]
+                                local displayName = tx[3]
+
+                                if displayName == player.Name then continue end
+
+                                local isBodyJumped = false
+                                local isSilas = false
+
+                                -- Verifică dacă e body jumped
+                                if bodyJumpedPlayers[plr.Name] then
+                                    isBodyJumped = true
                                 end
-                            end
-                            if plr then break end
-                        end
-                    end
-                else
-                    isBodyJumped = CheckIfBodyJumped(plr)
-                    if isBodyJumped then
-                        BodyJumpedCache[plr.Name] = true
-                    end
 
-                    if not isBodyJumped then
-                        local charName = plr:GetAttribute("CharacterName")
-                        if charName == "The Trickster" or charName == "Silas" then
-                            isSilas = true
-                        elseif plr:GetAttribute("DisguiseId") then
-                            isSilas = true
-                        else
-                            local char = plr.Character
-                            if char then
-                                if char:GetAttribute("Disguise") or char:FindFirstChild("Disguise") then
+                                -- Verifică dacă e Silas
+                                if silasPlayers[plr.Name] then
                                     isSilas = true
                                 end
+
+                                -- Dacă nu e body jumped, verifică din nou
+                                if not isBodyJumped then
+                                    isBodyJumped = CheckIfBodyJumped(plr)
+                                    if isBodyJumped then
+                                        BodyJumpedCache[plr.Name] = true
+                                    end
+                                end
+
+                                -- Dacă nu e Silas, verifică din nou
+                                if not isBodyJumped and not isSilas then
+                                    local charName = plr:GetAttribute("CharacterName")
+                                    if charName == "The Trickster" or charName == "Silas" then
+                                        isSilas = true
+                                    elseif plr:GetAttribute("DisguiseId") then
+                                        isSilas = true
+                                    else
+                                        local char = plr.Character
+                                        if char then
+                                            if char:GetAttribute("Disguise") or char:FindFirstChild("Disguise") then
+                                                isSilas = true
+                                            end
+                                        end
+                                    end
+                                end
+
+                                local cleanSpecie = rawSpecie:gsub("^%s*(.-)%s*$", "%1")
+                                local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
+
+                                -- Folosește dicționarul N pentru nume real
+                                local nm = N[charNameTag] or charNameTag
+
+                                -- Override pentru cazuri speciale
+                                if isBodyJumped then
+                                    nm = "Esther Mikaelson"
+                                    sp = "Witch"
+                                elseif isSilas then
+                                    sp = "Immortal"
+                                    nm = "Silas"
+                                elseif sp == "Immortal" then
+                                    if charNameTag == "The Anchor" or charNameTag == "Amara" then
+                                        nm = "Amara"
+                                        sp = "Immortal"
+                                    else
+                                        isSilas = true
+                                        sp = "Immortal"
+                                        nm = "Silas"
+                                    end
+                                end
+
+                                local color = SPECIES_COLORS[sp] or SPECIES_COLORS.Default
+
+                                new[plr.Name] = {sp = sp, nm = nm, color = color, player = plr, isSilas = isSilas, isBodyJumped = isBodyJumped}
+
+                                -- Construiește textul pentru ESP
+                                local parts = {}
+                                if isBodyJumped then
+                                    parts[#parts + 1] = "Esther Mikaelson"
+                                    if Options.ShowSpecies then
+                                        parts[#parts + 1] = "[Witch]"
+                                    end
+                                elseif isSilas then
+                                    parts[#parts + 1] = "Silas"
+                                    if Options.ShowSpecies then
+                                        parts[#parts + 1] = "[Immortal]"
+                                    end
+                                else
+                                    if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
+                                    if Options.ShowRealName then parts[#parts + 1] = nm end
+                                end
+                                newTextCache[plr.Name] = table_concat(parts, " ")
                             end
                         end
                     end
                 end
-
-                if plr and plr ~= LP and plr.Name ~= MY_NAME then
-                    local cleanSpecie = rawSpecie:gsub("^%s*(.-)%s*$", "%1")
-                    local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
-
-                    local nm = N[charNameTag] or charNameTag
-
-                    if isSilas then
-                        sp = "Immortal"
-                        nm = "Silas"
-                    elseif sp == "Immortal" then
-                        if charNameTag == "The Anchor" or charNameTag == "Amara" then
-                            nm = "Amara"
-                            sp = "Immortal"
-                        else
-                            isSilas = true
-                            sp = "Immortal"
-                            nm = "Silas"
-                        end
-                    end
-
-                    if isBodyJumped then
-                        nm = N[charNameTag] or charNameTag
-                        sp = "Witch"
-                    end
-
-                    local color = SPECIES_COLORS[sp] or SPECIES_COLORS.Default
-
-                    new[plr.Name] = {sp = sp, nm = nm, color = color, player = plr, isSilas = isSilas}
-
-                    local parts = {}
-                    if isBodyJumped then
-                        parts[#parts + 1] = "Esther Mikaelson"
-                    elseif isSilas then
-                        parts[#parts + 1] = "Silas"
-                    else
-                        if Options.ShowSpecies then parts[#parts + 1] = "[" .. sp .. "]" end
-                        if Options.ShowRealName then parts[#parts + 1] = nm end
-                    end
-                    newTextCache[plr.Name] = table_concat(parts, " ")
-                end
             end
         end
     end
+    
     PlayerCache = new
     TextCache = newTextCache
-end
-
-local function UpdateIWOSCache()
-    local newIWOS = {}
-    local iwosFolder = W:FindFirstChild("IndestructibleWhiteOakStake")
-    if iwosFolder then
-        for _, stake in pairs(iwosFolder:GetChildren()) do
-            local rt = stake:IsA("BasePart") and stake or (stake:IsA("Model") and stake.PrimaryPart)
-            if not rt then for _, p in pairs(stake:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
-            if rt then newIWOS[#newIWOS + 1] = rt end
-        end
-    end
-    IWOSCache = newIWOS
 end
 
 local function UpdateCureCache()
