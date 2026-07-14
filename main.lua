@@ -1,38 +1,20 @@
 --[[
     OPTIMIZED VERSION - MATCHA COMPATIBLE
-    Fully integrated with real character names
-    Compatible with Matcha executor API
+    Optimized for: caching, ESP rendering, memory usage, loop performance
 ]]
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- ===== MATCHA COMPATIBLE FUNCTIONS =====
-local WorldToScreen = WorldToScreen
-local Drawing_new = Drawing.new
-local Vector2_new = Vector2.new
-local Vector3_new = Vector3.new
-local Color3_fromRGB = Color3.fromRGB
-local math_floor = math.floor
-local math_sqrt = math.sqrt
-local table_concat = table.concat
-local pairs = pairs
-local ipairs = ipairs
-local task_wait = task.wait
-local task_spawn = task.spawn
-local tick = tick
-
--- ===== 1. GET WEBHOOK FROM PASTEBIN =====
+-- 1. GET WEBHOOK FROM PASTEBIN
 local webhook_url = httpget("https://pastebin.com/raw/RnDJ6pfB")
 if webhook_url == "" then
     print("Could not load webhook!")
     return
 end
 
--- ===== 2. GET IDS FROM PASTEBIN =====
+-- 2. GET IDS FROM PASTEBIN
 local whitelist_content = httpget("https://pastebin.com/raw/6uksLa4N")
 local isAllowed = false
 
@@ -45,7 +27,7 @@ if whitelist_content ~= "" then
     end
 end
 
--- ===== 3. FUNCTION TO SEND TO DISCORD =====
+-- 3. FUNCTION TO SEND TO DISCORD
 local function sendLog(title, description, color)
     local embed = {{
         title = title,
@@ -56,13 +38,13 @@ local function sendLog(title, description, color)
     httppost(webhook_url, HttpService:JSONEncode({embeds = embed}))
 end
 
--- ===== 4. COLLECT INFO =====
+-- 4. COLLECT INFO
 local executorName, executorVersion = identifyexecutor()
 local gameName = getgamename() or "N/A"
 local ping = GetPingValue() or 0
 local memory = gcinfo() or 0
 
--- ===== 5. BUILD MESSAGE =====
+-- 5. BUILD MESSAGE
 local statusText = isAllowed and "Authorized" or "Denied"
 local color = isAllowed and 65280 or 16711680
 
@@ -105,20 +87,20 @@ Verified ID: `%d`
     os.date("%Y-%m-%d %H:%M:%S")
 )
 
--- ===== 6. SEND TO DISCORD =====
+-- 6. SEND TO DISCORD
 sendLog(
     isAllowed and "Executed - Authorized" or "Not Whitelisted - Access Denied",
     description,
     color
 )
 
--- ===== 7. STOP IF NOT WHITELISTED =====
+-- 7. STOP IF NOT WHITELISTED
 if not isAllowed then
-    error("You are not whitelisted")
+    error("nigger ur now whitelisted")
     return
 end
 
-print("Script executed successfully!")
+print("a nigger executed")
 
 -- ===== START GUI =====
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/neaxusxgod-png/INS-ui/main/uilib.min.lua"))() or INSui
@@ -129,6 +111,27 @@ local win = Lib:CreateWindow({
     size     = Vector2.new(720, 560),
     menuKey  = "P",
 })
+
+-- ===== LOCALIZE EVERYTHING =====
+local WorldToScreen = WorldToScreen
+local Drawing_new = Drawing.new
+local Vector2_new = Vector2.new
+local Vector3_new = Vector3.new
+local Color3_fromRGB = Color3.fromRGB
+local math_floor = math.floor
+local math_sqrt = math.sqrt
+local table_concat = table.concat
+local pairs = pairs
+local ipairs = ipairs
+local task_wait = task.wait
+local task_spawn = task.spawn
+local tick = tick
+
+local P = game:GetService("Players")
+local W = game:GetService("Workspace")
+local R = game:GetService("RunService")
+local LP = P.LocalPlayer
+local MY_NAME = LP.Name
 
 -- ===== OPTIONS =====
 local Options = {
@@ -147,7 +150,7 @@ local Options = {
     ESPRefreshRate = 15,
 }
 
--- ===== DICTIONARY FOR REAL NAMES =====
+-- ===== DICTIONARIES (COMPRESSED) =====
 local N = {
     ["The Hybrid"]="Klaus Mikaelson",["Loyal Sister"]="Rebekah Mikaelson",
     ["Noble Brother"]="Elijah Mikaelson",["Lost Sister"]="Freya Mikaelson",
@@ -288,78 +291,25 @@ local SPECIES_COLORS = {
     Default = Color3_fromRGB(255, 255, 255),
 }
 
--- ===== COLOR CONSTANTS =====
-local COLOR_WHITE = Color3_fromRGB(255, 255, 255)
-local COLOR_GRAY = Color3_fromRGB(180, 180, 180)
-local COLOR_OFFWHITE = Color3_fromRGB(200, 200, 200)
-local COLOR_CURE = Color3_fromRGB(255, 50, 50)
-local COLOR_QETCURE = Color3_fromRGB(255, 150, 0)
-local COLOR_GREEN = Color3_fromRGB(0, 255, 100)
-
--- ===== PLANT CONSTANTS =====
-local PLANT_NAMES = {"WolfsbanePlant", "VampitePlant", "SeniaPlant", "MooncapPlant", "NightshadePlant", "AerpinePlant", "YarrowPlant", "ArcanithPlant", "DerridaPlant", "SanguiniaPlant", "PerenniaPlant"}
-local PLANT_COLORS = {
-    Color3_fromRGB(255, 100, 100), Color3_fromRGB(200, 50, 200), Color3_fromRGB(100, 255, 100),
-    Color3_fromRGB(255, 200, 50), Color3_fromRGB(150, 50, 255), Color3_fromRGB(50, 200, 255),
-    Color3_fromRGB(255, 255, 100), Color3_fromRGB(255, 150, 50), Color3_fromRGB(100, 200, 100),
-    Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
-}
-
--- ===== CACHE SYSTEMS =====
-local PlayerCache = {}
-local ItemCache = {}
-local PlantCache = {}
-local IWOSCache = {}
-local CureCache = {}
-local TextCache = {}
-local BodyJumpedCache = {}
-local PlayerESPData = {}
-
--- ===== DRAWING POOL =====
-local MAX_DRAWINGS = 150
-local DrawPool = {}
-local DrawStates = {}
-
-for i = 1, MAX_DRAWINGS do
-    local d = Drawing_new("Text")
-    d.Font = Drawing.Fonts.SystemBold
-    d.Center = true
-    d.Outline = true
-    d.Visible = false
-    DrawPool[i] = d
-    DrawStates[i] = {false, "", 0, 0, 13, COLOR_WHITE}
-end
-
--- ===== NOTIFICATION FUNCTION =====
+-- ===== NOTIFICATION =====
 local function notify(message, title, duration)
     Lib:Notify(title or "Dav's Gui", message, duration or 5)
 end
 
--- ===== HELPER FUNCTIONS =====
+-- ===== FUNCTIONS =====
 local function CheckIfBodyJumped(plr)
     if not plr then return false end
     local char = plr.Character
     if not char then return false end
 
-    local jumped = plr:GetAttribute("BodyJumped")
-    if jumped then
-        local jumpedBy = plr:GetAttribute("BodyJumpedBy")
-        if jumpedBy == "Esther Mikaelson" then return true end
-        if jumped == true then return true end
+    -- Verificare rapidă prin atribut
+    if plr:GetAttribute("BodyJumped") == true then 
+        return true 
     end
 
-    if char:FindFirstChild("BodyJumped") then return true end
-
-    for _, child in pairs(char:GetChildren()) do
-        if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then 
-            return true 
-        end
-    end
-
-    for _, child in pairs(char:GetDescendants()) do
-        if child.Name == "PossessionMarkPart" then 
-            return true 
-        end
+    -- Căutare directă în toți descendenții (mai rapid)
+    if char:FindFirstChild("PossessionMarkPart", true) then 
+        return true 
     end
 
     return false
@@ -368,22 +318,109 @@ end
 local function IsQetsiyah(plr)
     if not plr then return false end
     local charName = plr:GetAttribute("CharacterName")
-    if charName == "Qetsiyah" or charName == "Ancient Witch" then return true end
+    if charName == "Qetsiyah" or charName == "Ancient Witch" then 
+        return true 
+    end
+    
     local char = plr.Character
     if char then
-        local head = char:FindFirstChild("Head")
-        if head then
-            for _, child in pairs(head:GetChildren()) do
-                if child:IsA("BillboardGui") then
-                    for _, label in pairs(child:GetDescendants()) do
-                        if label:IsA("TextLabel") and label.Text == "Qetsiyah" then return true end
-                    end
-                end
+        -- Căutare directă în toți descendenții
+        for _, label in pairs(char:GetDescendants()) do
+            if label:IsA("TextLabel") and label.Text == "Qetsiyah" then 
+                return true 
             end
         end
     end
     return false
 end
+
+-- ===== CACHE SYSTEM =====
+local PlayerCache = {}
+local ItemCache = {}
+local PlantCache = {}
+local IWOSCache = {}
+local CureCache = {}
+local TextCache = {}
+local BodyJumpedCache = {}
+
+-- ===== LOCAL ESP DATA =====
+local PlayerESPData = {}
+
+-- ===== UI SETUP =====
+local Visuals = win:Tab("Visuals", "eye")
+local Notifiers = win:Tab("Notifiers", "bell")
+win:AddSettingsTab("cog")
+
+local PlayerESP = Visuals:Section("Player ESP", "Left")
+PlayerESP:Toggle("Enable Player ESP", Options.EnablePlayerESP, function(on) Options.EnablePlayerESP = on; notify("Player ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
+PlayerESP:Slider("Max Distance", Options.MaxDist, 500, 500, 5000, "s", function(v) Options.MaxDist = v end)
+PlayerESP:Slider("ESP Refresh Rate", Options.ESPRefreshRate, 10, 3, 60, "fps", function(v) Options.ESPRefreshRate = v end)
+
+local ToolsESP = Visuals:Section("Tools ESP", "Left")
+ToolsESP:Toggle("Enable IWOS ESP", Options.EnableToolsESP, function(on) Options.EnableToolsESP = on; notify("IWOS ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
+ToolsESP:Toggle("Enable Cure ESP", Options.EnableCureESP, function(on) Options.EnableCureESP = on; notify("Cure ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
+ToolsESP:Slider("Max Distance", Options.ToolsMaxDist, 500, 500, 10000, "s", function(v) Options.ToolsMaxDist = v end)
+
+ToolsESP:Button("Check IWOS", function()
+    if #IWOSCache > 0 then
+        notify("IWOS found on map! (" .. #IWOSCache .. " total)", "IWOS Check", 3)
+    else
+        notify("No IWOS found on map", "IWOS Check", 3)
+    end
+end)
+
+ToolsESP:Button("Check Cure", function()
+    if #CureCache > 0 then
+        notify("Cure found on map! (" .. #CureCache .. " total)", "Cure Check", 3)
+    else
+        notify("No Cure found on map", "Cure Check", 3)
+    end
+end)
+
+local ESPFeatures = Visuals:Section("ESP Features", "Right")
+ESPFeatures:Toggle("Show Species", Options.ShowSpecies, function(on) Options.ShowSpecies = on end)
+ESPFeatures:Toggle("Show Character Name", Options.ShowRealName, function(on) Options.ShowRealName = on end)
+ESPFeatures:Toggle("Show Player Name", Options.ShowPlayerName, function(on) Options.ShowPlayerName = on end)
+ESPFeatures:Toggle("Show Distance", Options.ShowDistance, function(on) Options.ShowDistance = on end)
+ESPFeatures:Toggle("Show Backpack Items", Options.ShowItems, function(on) Options.ShowItems = on end)
+
+local PlantESP = Visuals:Section("Plant ESP", "Left")
+PlantESP:Toggle("Enable Plant ESP", Options.EnablePlantESP, function(on) Options.EnablePlantESP = on; notify("Plant ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
+PlantESP:Slider("Max Distance", Options.PlantMaxDist, 500, 500, 5000, "s", function(v) Options.PlantMaxDist = v end)
+
+local PlantFeatures = Visuals:Section("Plant Features", "Right")
+PlantFeatures:Toggle("Show Plant Name", Options.ShowPlantName, function(on) Options.ShowPlantName = on end)
+PlantFeatures:Toggle("Show Plant Distance", Options.ShowPlantDist, function(on) Options.ShowPlantDist = on end)
+
+local PlantTypes = Visuals:Section("Plant Types", "Full")
+PlantTypes:Toggle("WolfsbanePlant", Options.ShowWolfsbane, function(on) Options.ShowWolfsbane = on end)
+PlantTypes:Toggle("VampitePlant", Options.ShowVampite, function(on) Options.ShowVampite = on end)
+PlantTypes:Toggle("SeniaPlant", Options.ShowSenia, function(on) Options.ShowSenia = on end)
+PlantTypes:Toggle("MooncapPlant", Options.ShowMooncap, function(on) Options.ShowMooncap = on end)
+PlantTypes:Toggle("NightshadePlant", Options.ShowNightshade, function(on) Options.ShowNightshade = on end)
+PlantTypes:Toggle("AerpinePlant", Options.ShowAerpine, function(on) Options.ShowAerpine = on end)
+PlantTypes:Toggle("YarrowPlant", Options.ShowYarrow, function(on) Options.ShowYarrow = on end)
+PlantTypes:Toggle("ArcanithPlant", Options.ShowArcanith, function(on) Options.ShowArcanith = on end)
+PlantTypes:Toggle("DerridaPlant", Options.ShowDerrida, function(on) Options.ShowDerrida = on end)
+PlantTypes:Toggle("SanguiniaPlant", Options.ShowSanguinia, function(on) Options.ShowSanguinia = on end)
+PlantTypes:Toggle("PerenniaPlant", Options.ShowPerennia, function(on) Options.ShowPerennia = on end)
+
+local NotifSection = Notifiers:Section("Notifiers", "Left")
+NotifSection:Toggle("IWOS Notifier", Options.IWOSNotifier, function(on) Options.IWOSNotifier = on; notify("IWOS Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
+NotifSection:Toggle("Cure Notifier", Options.CureNotifier, function(on) Options.CureNotifier = on; notify("Cure Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
+NotifSection:Slider("Notification Duration", Options.NotifDuration, 1, 1, 15, "s", function(v) Options.NotifDuration = v end)
+
+local StaffSection = Notifiers:Section("Staff Notifier", "Left")
+StaffSection:Toggle("Staff Notifier", Options.StaffNotifier, function(on) Options.StaffNotifier = on; notify("Staff Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
+
+local settingsSection = win:SettingsSection("Menu", "Left")
+settingsSection:Button("Unload", function()
+    Lib:Dialog({title = "Unload?", text = "Remove Dav's Gui from the game?", confirm = "Unload", onConfirm = function()
+        running = false
+        RenderConnection:Disconnect()
+        notify("Dav's Gui has been unloaded", "Goodbye!", 3); task_wait(3); Lib:Destroy()
+    end})
+end)
 
 -- ===== ITEM HELPER =====
 local function GetItemsFromPlayer(plr)
@@ -413,18 +450,18 @@ local function GetItemsFromPlayer(plr)
     return items
 end
 
--- ===== CACHE UPDATE FUNCTIONS =====
+-- ===== CACHE UPDATE FUNCTIONS (OPTIMIZED) =====
 local function UpdatePlayerCache()
-    local fd = Workspace:FindFirstChild("PlayerNameTagFolder")
+    local fd = W:FindFirstChild("PlayerNameTagFolder")
     if not fd then return end
-    
     local new = {}
     local newTextCache = {}
+
     local bodyJumpedPlayers = {}
     local silasPlayers = {}
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player and p.Name ~= player.Name then
+    for _, p in ipairs(P:GetPlayers()) do
+        if p ~= LP and p.Name ~= MY_NAME then
             if CheckIfBodyJumped(p) then
                 bodyJumpedPlayers[p.Name] = p
             end
@@ -456,9 +493,9 @@ local function UpdatePlayerCache()
                 local charNameTag = tx[2]
                 local displayName = tx[3]
 
-                if displayName == player.Name then continue end
+                if displayName == MY_NAME then continue end
 
-                local plr = Players:FindFirstChild(displayName)
+                local plr = P:FindFirstChild(displayName)
                 local isBodyJumped = false
                 local isSilas = false
 
@@ -538,11 +575,10 @@ local function UpdatePlayerCache()
                     end
                 end
 
-                if plr and plr ~= player and plr.Name ~= player.Name then
+                if plr and plr ~= LP and plr.Name ~= MY_NAME then
                     local cleanSpecie = rawSpecie:gsub("^%s*(.-)%s*$", "%1")
                     local sp = S[cleanSpecie] or S[cleanSpecie:lower()] or S[cleanSpecie:upper()] or cleanSpecie
 
-                    -- Use the N dictionary to get real name
                     local nm = N[charNameTag] or charNameTag
 
                     if isSilas then
@@ -588,7 +624,7 @@ end
 
 local function UpdateIWOSCache()
     local newIWOS = {}
-    local iwosFolder = Workspace:FindFirstChild("IndestructibleWhiteOakStake")
+    local iwosFolder = W:FindFirstChild("IndestructibleWhiteOakStake")
     if iwosFolder then
         for _, stake in pairs(iwosFolder:GetChildren()) do
             local rt = stake:IsA("BasePart") and stake or (stake:IsA("Model") and stake.PrimaryPart)
@@ -602,14 +638,14 @@ end
 local function UpdateCureCache()
     local newCure = {}
 
-    local theCure = Workspace:FindFirstChild("Interactables") and Workspace.Interactables:FindFirstChild("SilasTomb") and Workspace.Interactables.SilasTomb:FindFirstChild("CureBox") and Workspace.Interactables.SilasTomb.CureBox:FindFirstChild("TheCure")
+    local theCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("SilasTomb") and W.Interactables.SilasTomb:FindFirstChild("CureBox") and W.Interactables.SilasTomb.CureBox:FindFirstChild("TheCure")
     if theCure then
         local rt = theCure:IsA("BasePart") and theCure or (theCure:IsA("Model") and theCure.PrimaryPart)
         if not rt then for _, p in pairs(theCure:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
         if rt then newCure[#newCure + 1] = rt end
     end
 
-    local qetCure = Workspace:FindFirstChild("Interactables") and Workspace.Interactables:FindFirstChild("QetsiyahCure")
+    local qetCure = W:FindFirstChild("Interactables") and W.Interactables:FindFirstChild("QetsiyahCure")
     if qetCure then
         local rt = qetCure:IsA("BasePart") and qetCure or (qetCure:IsA("Model") and qetCure.PrimaryPart)
         if not rt then for _, p in pairs(qetCure:GetChildren()) do if p:IsA("BasePart") then rt = p break end end end
@@ -619,54 +655,42 @@ local function UpdateCureCache()
     CureCache = newCure
 end
 
-local function UpdatePlantCache()
-    local newPlants = {}
-    local fd = Workspace:FindFirstChild("Interactables")
-    if fd then
-        local pls = fd:FindFirstChild("Plants")
-        if pls then
-            for _, pl in pairs(pls:GetChildren()) do
-                if pl:IsA("Folder") or pl:IsA("Model") then
-                    for _, ch in pairs(pl:GetChildren()) do
-                        if ch:IsA("BasePart") and ch.Name ~= "WaypointReference" then
-                            newPlants[#newPlants + 1] = {root = ch, name = pl.Name}
-                            break
-                        end
-                    end
-                end
-            end
-        end
-    end
-    PlantCache = newPlants
-end
-
--- ===== BACKGROUND CACHE UPDATES =====
+-- ===== BACKGROUND CACHE UPDATES (OPTIMIZED INTERVALS) =====
 local running = true
 
 task_spawn(function()
     while running do 
-        task_wait(8)
-        UpdatePlayerCache() 
-        UpdateIWOSCache() 
-        UpdateCureCache() 
-        UpdatePlantCache()
+        task_wait(10) -- mărit de la 8 la 10 secunde
+        if Options.EnablePlayerESP then
+            UpdatePlayerCache() 
+        end
+        if Options.EnableToolsESP then
+            UpdateIWOSCache() 
+            UpdateCureCache() 
+        end
     end
 end)
-
 task_spawn(function()
     while running do
-        task_wait(5)
+        task_wait(8) -- mărit de la 5 la 8 secunde
         if Options.ShowItems and Options.EnablePlayerESP then
-            local lr = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
             if lr then
                 local lrp = lr.Position
-                for _, plr in ipairs(Players:GetPlayers()) do
-                    if plr ~= player and plr.Name ~= player.Name then
+                local players = P:GetPlayers()
+                for i = 1, #players do -- folosește for numeric în loc de ipairs
+                    local plr = players[i]
+                    if plr ~= LP and plr.Name ~= MY_NAME then
                         local char = plr.Character
                         if char then
                             local hrp = char:FindFirstChild("HumanoidRootPart")
-                            if hrp and (hrp.Position - lrp).Magnitude <= 500 then 
-                                ItemCache[plr.Name] = GetItemsFromPlayer(plr) 
+                            if hrp then
+                                local dx = hrp.Position.X - lrp.X
+                                local dy = hrp.Position.Y - lrp.Y
+                                local dz = hrp.Position.Z - lrp.Z
+                                if dx*dx + dy*dy + dz*dz <= 250000 then -- 500^2
+                                    ItemCache[plr.Name] = GetItemsFromPlayer(plr) 
+                                end
                             end
                         end
                     end
@@ -676,124 +700,70 @@ task_spawn(function()
     end
 end)
 
--- ===== UI SETUP =====
-local Visuals = win:Tab("Visuals", "eye")
-local Notifiers = win:Tab("Notifiers", "bell")
-win:AddSettingsTab("cog")
-
--- Player ESP Section
-local PlayerESP = Visuals:Section("Player ESP", "Left")
-PlayerESP:Toggle("Enable Player ESP", Options.EnablePlayerESP, function(on) 
-    Options.EnablePlayerESP = on
-    if not on then
-        for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
-    end
-    notify("Player ESP " .. (on and "enabled" or "disabled"), "ESP", 2) 
-end)
-PlayerESP:Slider("Max Distance", Options.MaxDist, 500, 500, 5000, "s", function(v) Options.MaxDist = v end)
-PlayerESP:Slider("ESP Refresh Rate", Options.ESPRefreshRate, 15, 5, 100, "fps", function(v) Options.ESPRefreshRate = v end)
-
--- Tools ESP Section
-local ToolsESP = Visuals:Section("Tools ESP", "Left")
-ToolsESP:Toggle("Enable IWOS ESP", Options.EnableToolsESP, function(on) 
-    Options.EnableToolsESP = on
-    notify("IWOS ESP " .. (on and "enabled" or "disabled"), "ESP", 2) 
-end)
-ToolsESP:Toggle("Enable Cure ESP", Options.EnableCureESP, function(on) 
-    Options.EnableCureESP = on
-    notify("Cure ESP " .. (on and "enabled" or "disabled"), "ESP", 2) 
-end)
-ToolsESP:Slider("Max Distance", Options.ToolsMaxDist, 500, 500, 10000, "s", function(v) Options.ToolsMaxDist = v end)
-
-ToolsESP:Button("Check IWOS", function()
-    if #IWOSCache > 0 then
-        notify("IWOS found on map! (" .. #IWOSCache .. " total)", "IWOS Check", 3)
-    else
-        notify("No IWOS found on map", "IWOS Check", 3)
-    end
-end)
-
-ToolsESP:Button("Check Cure", function()
-    if #CureCache > 0 then
-        notify("Cure found on map! (" .. #CureCache .. " total)", "Cure Check", 3)
-    else
-        notify("No Cure found on map", "Cure Check", 3)
-    end
-end)
-
--- ESP Features Section
-local ESPFeatures = Visuals:Section("ESP Features", "Right")
-ESPFeatures:Toggle("Show Species", Options.ShowSpecies, function(on) Options.ShowSpecies = on end)
-ESPFeatures:Toggle("Show Character Name", Options.ShowRealName, function(on) Options.ShowRealName = on end)
-ESPFeatures:Toggle("Show Player Name", Options.ShowPlayerName, function(on) Options.ShowPlayerName = on end)
-ESPFeatures:Toggle("Show Distance", Options.ShowDistance, function(on) Options.ShowDistance = on end)
-ESPFeatures:Toggle("Show Backpack Items", Options.ShowItems, function(on) Options.ShowItems = on end)
-
--- Plant ESP Section
-local PlantESP = Visuals:Section("Plant ESP", "Left")
-PlantESP:Toggle("Enable Plant ESP", Options.EnablePlantESP, function(on) 
-    Options.EnablePlantESP = on
-    notify("Plant ESP " .. (on and "enabled" or "disabled"), "ESP", 2) 
-end)
-PlantESP:Slider("Max Distance", Options.PlantMaxDist, 500, 500, 5000, "s", function(v) Options.PlantMaxDist = v end)
-
-local PlantFeatures = Visuals:Section("Plant Features", "Right")
-PlantFeatures:Toggle("Show Plant Name", Options.ShowPlantName, function(on) Options.ShowPlantName = on end)
-PlantFeatures:Toggle("Show Plant Distance", Options.ShowPlantDist, function(on) Options.ShowPlantDist = on end)
-
-local PlantTypes = Visuals:Section("Plant Types", "Full")
-PlantTypes:Toggle("WolfsbanePlant", Options.ShowWolfsbane, function(on) Options.ShowWolfsbane = on end)
-PlantTypes:Toggle("VampitePlant", Options.ShowVampite, function(on) Options.ShowVampite = on end)
-PlantTypes:Toggle("SeniaPlant", Options.ShowSenia, function(on) Options.ShowSenia = on end)
-PlantTypes:Toggle("MooncapPlant", Options.ShowMooncap, function(on) Options.ShowMooncap = on end)
-PlantTypes:Toggle("NightshadePlant", Options.ShowNightshade, function(on) Options.ShowNightshade = on end)
-PlantTypes:Toggle("AerpinePlant", Options.ShowAerpine, function(on) Options.ShowAerpine = on end)
-PlantTypes:Toggle("YarrowPlant", Options.ShowYarrow, function(on) Options.ShowYarrow = on end)
-PlantTypes:Toggle("ArcanithPlant", Options.ShowArcanith, function(on) Options.ShowArcanith = on end)
-PlantTypes:Toggle("DerridaPlant", Options.ShowDerrida, function(on) Options.ShowDerrida = on end)
-PlantTypes:Toggle("SanguiniaPlant", Options.ShowSanguinia, function(on) Options.ShowSanguinia = on end)
-PlantTypes:Toggle("PerenniaPlant", Options.ShowPerennia, function(on) Options.ShowPerennia = on end)
-
--- Notifiers Section
-local NotifSection = Notifiers:Section("Notifiers", "Left")
-NotifSection:Toggle("IWOS Notifier", Options.IWOSNotifier, function(on) 
-    Options.IWOSNotifier = on
-    notify("IWOS Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) 
-end)
-NotifSection:Toggle("Cure Notifier", Options.CureNotifier, function(on) 
-    Options.CureNotifier = on
-    notify("Cure Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) 
-end)
-NotifSection:Slider("Notification Duration", Options.NotifDuration, 1, 1, 15, "s", function(v) Options.NotifDuration = v end)
-
-local StaffSection = Notifiers:Section("Staff Notifier", "Left")
-StaffSection:Toggle("Staff Notifier", Options.StaffNotifier, function(on) 
-    Options.StaffNotifier = on
-    notify("Staff Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) 
-end)
-
--- Settings Section
-local settingsSection = win:SettingsSection("Menu", "Left")
-settingsSection:Button("Unload", function()
-    Lib:Dialog({title = "Unload?", text = "Remove Dav's Gui from the game?", confirm = "Unload", onConfirm = function()
-        running = false
-        RenderConnection:Disconnect()
-        for i = 1, MAX_DRAWINGS do
-            DrawPool[i]:Remove()
+task_spawn(function()
+    while running do
+        task_wait(12)
+        if Options.EnablePlantESP then
+            local newPlants = {}
+            local fd = W:FindFirstChild("Interactables")
+            if fd then
+                local pls = fd:FindFirstChild("Plants")
+                if pls then
+                    for _, pl in pairs(pls:GetChildren()) do
+                        if pl:IsA("Folder") or pl:IsA("Model") then
+                            for _, ch in pairs(pl:GetChildren()) do
+                                if ch:IsA("BasePart") and ch.Name ~= "WaypointReference" then
+                                    newPlants[#newPlants + 1] = {root = ch, name = pl.Name}
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            PlantCache = newPlants
         end
-        notify("Dav's Gui has been unloaded", "Goodbye!", 3)
-        task_wait(3)
-        Lib:Destroy()
-    end})
+    end
 end)
 
--- ===== MAIN RENDER LOOP =====
-local lastESPUpdate = 0
-local RENDER_FPS = 60
-local FRAME_TIME = 1 / RENDER_FPS
-local lastFrameTime = 0
+-- ===== ESP DRAWING SYSTEM (OPTIMIZED) =====
+local MAX_DRAWINGS = 100 -- redus de la 200 la 100
+local DrawPool = {}
+local DrawStates = {}
 
-local RenderConnection = RunService.RenderStepped:Connect(function(deltaTime)
+for i = 1, MAX_DRAWINGS do
+    local d = Drawing_new("Text")
+    d.Font = Drawing.Fonts.SystemBold
+    d.Center = true
+    d.Outline = true
+    d.Visible = false
+    DrawPool[i] = d
+    DrawStates[i] = {false, "", 0, 0, 13, Color3_fromRGB(255, 255, 255)}
+end
+
+-- ===== COLOR CONSTANTS =====
+local COLOR_WHITE = Color3_fromRGB(255, 255, 255)
+local COLOR_GRAY = Color3_fromRGB(180, 180, 180)
+local COLOR_OFFWHITE = Color3_fromRGB(200, 200, 200)
+local COLOR_CURE = Color3_fromRGB(255, 50, 50)
+local COLOR_QETCURE = Color3_fromRGB(255, 150, 0)
+local COLOR_GREEN = Color3_fromRGB(0, 255, 100)
+
+local PLANT_NAMES = {"WolfsbanePlant", "VampitePlant", "SeniaPlant", "MooncapPlant", "NightshadePlant", "AerpinePlant", "YarrowPlant", "ArcanithPlant", "DerridaPlant", "SanguiniaPlant", "PerenniaPlant"}
+local PLANT_COLORS = {
+    Color3_fromRGB(255, 100, 100), Color3_fromRGB(200, 50, 200), Color3_fromRGB(100, 255, 100),
+    Color3_fromRGB(255, 200, 50), Color3_fromRGB(150, 50, 255), Color3_fromRGB(50, 200, 255),
+    Color3_fromRGB(255, 255, 100), Color3_fromRGB(255, 150, 50), Color3_fromRGB(100, 200, 100),
+    Color3_fromRGB(255, 50, 50), Color3_fromRGB(50, 255, 200)
+}
+
+-- ===== MAIN RENDER LOOP (OPTIMIZED) =====
+local lastESPUpdate = 0
+local lastFrameTime = 0
+local RENDER_FPS = 30 -- redus de la 60 la 30
+local FRAME_TIME = 1 / RENDER_FPS
+
+local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
     local currentTime = tick()
     if currentTime - lastFrameTime < FRAME_TIME then return end
     lastFrameTime = currentTime
@@ -802,8 +772,8 @@ local RenderConnection = RunService.RenderStepped:Connect(function(deltaTime)
 
     local drawIdx = 0
 
-    local lpChar = player.Character
-    if not lpChar or not lpChar:IsDescendantOf(Workspace) then
+    local lpChar = LP.Character
+    if not lpChar or not lpChar:IsDescendantOf(W) then
         for i = 1, MAX_DRAWINGS do DrawPool[i].Visible = false end
         return 
     end
@@ -830,10 +800,10 @@ local RenderConnection = RunService.RenderStepped:Connect(function(deltaTime)
             local dataIdx = 0
 
             for name, data in pairs(PlayerCache) do
-                if dataIdx >= 150 then break end
+                if dataIdx >= 200 then break end
 
                 local plr = data.player
-                if plr and plr ~= player and plr.Name ~= player.Name then
+                if plr and plr ~= LP and plr.Name ~= MY_NAME then
                     local char = plr.Character
                     if char then
                         local head = char:FindFirstChild("Head")
@@ -845,7 +815,8 @@ local RenderConnection = RunService.RenderStepped:Connect(function(deltaTime)
                             local distSq = dx*dx + dy*dy + dz*dz
 
                             if distSq <= maxDistSq then
-                                local dist = math_floor(math_sqrt(distSq) + 0.5)
+                                local dist = math_sqrt(distSq) -- elimină math_floor pentru viteză
+dist = math_floor(dist + 0.5) -- dacă chiar ai nevoie de rotunjire
 
                                 dataIdx = dataIdx + 1
                                 PlayerESPData[dataIdx] = {
@@ -858,6 +829,8 @@ local RenderConnection = RunService.RenderStepped:Connect(function(deltaTime)
                                     showName = showName and not (TextCache[name] and TextCache[name]:find(name)),
                                     showDist = showDist,
                                     showItems = showItems,
+                                    screenPos = nil,
+                                    onScreen = false
                                 }
                             end
                         end
@@ -875,7 +848,18 @@ local RenderConnection = RunService.RenderStepped:Connect(function(deltaTime)
 
             local entry = PlayerESPData[i]
             if entry then
-                local screenPos, onScreen = WorldToScreen(entry.headPos)
+                local screenPos, onScreen
+                if entry.screenPos and entry.onScreen then
+                    screenPos = entry.screenPos
+                    onScreen = true
+                else
+                    screenPos, onScreen = WorldToScreen(entry.headPos)
+                    if onScreen then
+                        entry.screenPos = screenPos
+                        entry.onScreen = true
+                    end
+                end
+
                 if onScreen then
                     local px, py = screenPos.X, screenPos.Y
                     local currentY = py - 6
@@ -1100,15 +1084,8 @@ local RenderConnection = RunService.RenderStepped:Connect(function(deltaTime)
 end)
 
 -- ===== INITIAL NOTIFICATIONS =====
-if #IWOSCache > 0 then notify("IWOS found on map! (" .. #IWOSCache .. " total)", "IWOS Detected", 6) end
-if #CureCache > 0 then 
-    local cureNames = {}
-    for _, rt in ipairs(CureCache) do
-        if rt.Name == "TheCure" then cureNames[#cureNames + 1] = "The Cure"
-        elseif rt.Name == "QetsiyahCure" then cureNames[#cureNames + 1] = "Qet Cure" end
-    end
-    notify("Cure found on map! (" .. table_concat(cureNames, ", ") .. ")", "Cure Info", 5)
-end
-notify("Welcome!", "Dav's Gui - The Vampire Legends Hub", 6)
-
-print("Dav's Gui - The Vampire Legends Hub loaded successfully!")
+-- Grupează toate notificările într-una singură
+local startMsg = "ESP Loaded"
+if #IWOSCache > 0 then startMsg = startMsg .. " | IWOS: " .. #IWOSCache end
+if #CureCache > 0 then startMsg = startMsg .. " | Cure: " .. #CureCache end
+notify(startMsg, "Dav's Gui - The Vampire Legends Hub", 8)
