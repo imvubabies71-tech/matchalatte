@@ -302,14 +302,25 @@ local function CheckIfBodyJumped(plr)
     local char = plr.Character
     if not char then return false end
 
-    -- Verificare rapidă prin atribut
-    if plr:GetAttribute("BodyJumped") == true then 
-        return true 
+    local jumped = plr:GetAttribute("BodyJumped")
+    if jumped then
+        local jumpedBy = plr:GetAttribute("BodyJumpedBy")
+        if jumpedBy == "Esther Mikaelson" then return true end
+        if jumped == true then return true end
     end
 
-    -- Căutare directă în toți descendenții (mai rapid)
-    if char:FindFirstChild("PossessionMarkPart", true) then 
-        return true 
+    if char:FindFirstChild("BodyJumped") then return true end
+
+    for _, child in pairs(char:GetChildren()) do
+        if child:IsA("BasePart") and child.Name == "PossessionMarkPart" then 
+            return true 
+        end
+    end
+
+    for _, child in pairs(char:GetDescendants()) do
+        if child.Name == "PossessionMarkPart" then 
+            return true 
+        end
     end
 
     return false
@@ -318,16 +329,17 @@ end
 local function IsQetsiyah(plr)
     if not plr then return false end
     local charName = plr:GetAttribute("CharacterName")
-    if charName == "Qetsiyah" or charName == "Ancient Witch" then 
-        return true 
-    end
-    
+    if charName == "Qetsiyah" or charName == "Ancient Witch" then return true end
     local char = plr.Character
     if char then
-        -- Căutare directă în toți descendenții
-        for _, label in pairs(char:GetDescendants()) do
-            if label:IsA("TextLabel") and label.Text == "Qetsiyah" then 
-                return true 
+        local head = char:FindFirstChild("Head")
+        if head then
+            for _, child in pairs(head:GetChildren()) do
+                if child:IsA("BillboardGui") then
+                    for _, label in pairs(child:GetDescendants()) do
+                        if label:IsA("TextLabel") and label.Text == "Qetsiyah" then return true end
+                    end
+                end
             end
         end
     end
@@ -354,7 +366,7 @@ win:AddSettingsTab("cog")
 local PlayerESP = Visuals:Section("Player ESP", "Left")
 PlayerESP:Toggle("Enable Player ESP", Options.EnablePlayerESP, function(on) Options.EnablePlayerESP = on; notify("Player ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
 PlayerESP:Slider("Max Distance", Options.MaxDist, 500, 500, 5000, "s", function(v) Options.MaxDist = v end)
-PlayerESP:Slider("ESP Refresh Rate", Options.ESPRefreshRate, 10, 3, 60, "fps", function(v) Options.ESPRefreshRate = v end)
+PlayerESP:Slider("ESP Refresh Rate", Options.ESPRefreshRate, 15, 5, 100, "fps", function(v) Options.ESPRefreshRate = v end)
 
 local ToolsESP = Visuals:Section("Tools ESP", "Left")
 ToolsESP:Toggle("Enable IWOS ESP", Options.EnableToolsESP, function(on) Options.EnableToolsESP = on; notify("IWOS ESP " .. (on and "enabled" or "disabled"), "ESP", 2) end)
@@ -660,37 +672,27 @@ local running = true
 
 task_spawn(function()
     while running do 
-        task_wait(10) -- mărit de la 8 la 10 secunde
-        if Options.EnablePlayerESP then
-            UpdatePlayerCache() 
-        end
-        if Options.EnableToolsESP then
-            UpdateIWOSCache() 
-            UpdateCureCache() 
-        end
+        task_wait(8)
+        UpdatePlayerCache() 
+        UpdateIWOSCache() 
+        UpdateCureCache() 
     end
 end)
+
 task_spawn(function()
     while running do
-        task_wait(8) -- mărit de la 5 la 8 secunde
+        task_wait(5)
         if Options.ShowItems and Options.EnablePlayerESP then
             local lr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
             if lr then
                 local lrp = lr.Position
-                local players = P:GetPlayers()
-                for i = 1, #players do -- folosește for numeric în loc de ipairs
-                    local plr = players[i]
+                for _, plr in ipairs(P:GetPlayers()) do
                     if plr ~= LP and plr.Name ~= MY_NAME then
                         local char = plr.Character
                         if char then
                             local hrp = char:FindFirstChild("HumanoidRootPart")
-                            if hrp then
-                                local dx = hrp.Position.X - lrp.X
-                                local dy = hrp.Position.Y - lrp.Y
-                                local dz = hrp.Position.Z - lrp.Z
-                                if dx*dx + dy*dy + dz*dz <= 250000 then -- 500^2
-                                    ItemCache[plr.Name] = GetItemsFromPlayer(plr) 
-                                end
+                            if hrp and (hrp.Position - lrp).Magnitude <= 500 then 
+                                ItemCache[plr.Name] = GetItemsFromPlayer(plr) 
                             end
                         end
                     end
@@ -727,7 +729,7 @@ task_spawn(function()
 end)
 
 -- ===== ESP DRAWING SYSTEM (OPTIMIZED) =====
-local MAX_DRAWINGS = 100 -- redus de la 200 la 100
+local MAX_DRAWINGS = 200
 local DrawPool = {}
 local DrawStates = {}
 
@@ -760,7 +762,7 @@ local PLANT_COLORS = {
 -- ===== MAIN RENDER LOOP (OPTIMIZED) =====
 local lastESPUpdate = 0
 local lastFrameTime = 0
-local RENDER_FPS = 30 -- redus de la 60 la 30
+local RENDER_FPS = 60
 local FRAME_TIME = 1 / RENDER_FPS
 
 local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
@@ -815,8 +817,7 @@ local RenderConnection = R.RenderStepped:Connect(function(deltaTime)
                             local distSq = dx*dx + dy*dy + dz*dz
 
                             if distSq <= maxDistSq then
-                                local dist = math_sqrt(distSq) -- elimină math_floor pentru viteză
-dist = math_floor(dist + 0.5) -- dacă chiar ai nevoie de rotunjire
+                                local dist = math_floor(math_sqrt(distSq) + 0.5)
 
                                 dataIdx = dataIdx + 1
                                 PlayerESPData[dataIdx] = {
@@ -1084,8 +1085,13 @@ dist = math_floor(dist + 0.5) -- dacă chiar ai nevoie de rotunjire
 end)
 
 -- ===== INITIAL NOTIFICATIONS =====
--- Grupează toate notificările într-una singură
-local startMsg = "ESP Loaded"
-if #IWOSCache > 0 then startMsg = startMsg .. " | IWOS: " .. #IWOSCache end
-if #CureCache > 0 then startMsg = startMsg .. " | Cure: " .. #CureCache end
-notify(startMsg, "Dav's Gui - The Vampire Legends Hub", 8)
+if #IWOSCache > 0 then notify("IWOS found on map! (" .. #IWOSCache .. " total)", "IWOS Detected", 6) end
+if #CureCache > 0 then 
+    local cureNames = {}
+    for _, rt in ipairs(CureCache) do
+        if rt.Name == "TheCure" then cureNames[#cureNames + 1] = "The Cure"
+        elseif rt.Name == "QetsiyahCure" then cureNames[#cureNames + 1] = "Qet Cure" end
+    end
+    notify("Cure found on map! (" .. table_concat(cureNames, ", ") .. ")", "Cure Info", 5)
+end
+notify("Welcome!", "Dav's Gui - The Vampire Legends Hub", 6)
