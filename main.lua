@@ -410,7 +410,7 @@ NotifSection:Toggle("IWOS Notifier", Options.IWOSNotifier, function(on) Options.
 NotifSection:Toggle("Cure Notifier", Options.CureNotifier, function(on) Options.CureNotifier = on; notify("Cure Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
 NotifSection:Slider("Notification Duration", Options.NotifDuration, 1, 1, 15, "s", function(v) Options.NotifDuration = v end)
 
-local StaffSection = Notifiers:Section("Staff Notifier", "Left")
+local StaffSection = Notifiers:Section("Staff Notifier (has to be reworked)", "Left")
 StaffSection:Toggle("Staff Notifier", Options.StaffNotifier, function(on) Options.StaffNotifier = on; notify("Staff Notifier " .. (on and "enabled" or "disabled"), "Notifier", 2) end)
 
 local settingsSection = win:SettingsSection("Menu", "Left")
