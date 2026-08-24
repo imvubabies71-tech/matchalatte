@@ -1,35 +1,40 @@
+-- ============================================================
+-- Dav's Hub ESP - Full Featured on Collector + Renderer Engine
+-- Uses GetAttribute() for CharacterName & SpecieType
+-- Includes: Items, Map Items, Astral, Cured Tracking, BodyJumped
+-- ZERO LAG - Exact ca motorul acela mic
+-- ============================================================
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local lp = Players.LocalPlayer
 
-local LocalPlayer = Players.LocalPlayer
+-- ---- SETTINGS (ca la motorul mic) --------------------------
+local POOL         = 500      -- max targets
+local COLLECT_RATE = 0.5      -- seconds between collector ticks
+local SHOW_SELF    = false
 
+-- ---- CONFIG (din original) --------------------------------
 local CONFIG = {
     MaxDistance = 1200,
-
-    PlayerCacheInterval = 0.50,
-    ItemCacheInterval = 0.20,
-    AstralScanInterval = 0.20,
-
-    CleanupInterval = 10,
-
     MaxDrawings = 500,
-
     CharacterOffset = 2.5,
     UsernameOffset = 17,
     ItemStartOffset = 32,
     ItemGap = 14,
-
     MapItemOffset = 1,
     AstralOffset = 3,
 }
 
+-- ---- COLORS (din original) --------------------------------
 local COLORS = {
     Default = Color3.fromRGB(255, 255, 255),
-    Username = Color3.fromRGB(180, 180, 180),
+    Username = Color3.fromRGB(200, 200, 200),
     Item = Color3.fromRGB(255, 255, 255),
     MapItem = Color3.fromRGB(255, 255, 255),
     Astral = Color3.fromRGB(180, 140, 255),
+    BodyJumped = Color3.fromRGB(255, 215, 0), -- Gold
 }
 
 local SPECIE_COLORS = {
@@ -53,6 +58,7 @@ local ITEM_NAMES = {
     TheCure = "Cure",
 }
 
+-- ---- ESP TOGGLES -------------------------------------------
 local ESP = {
     Enabled = true,
     CharacterName = true,
@@ -60,887 +66,463 @@ local ESP = {
     Items = true,
     MapItems = true,
     Astral = true,
+    BodyJumped = true,
 }
 
-local CachedPlayers = {}
-local PlayerList = table.create(64)
-local PlayerCount = 0
-
-local IWOSCache = table.create(64)
-local IWOSCount = 0
-
-local CureCache = table.create(4)
-local CureCount = 0
-
-local AstralCache = {}
-local AstralDrawings = {}
-
-local CuredState = {}
+-- ---- STATE (ca la motorul mic) -----------------------------
+local running = true
+local targets = {}
 local SpeciesCache = {}
 
-local AstralProjection =
-    Workspace:FindFirstChild("AstralProjection")
+-- ---- CACHES (din original) --------------------------------
+local IWOSCache = {}
+local IWOSCount = 0
+local CureCache = {}
+local CureCount = 0
+local AstralCache = {}
+local AstralDrawings = {}
+local CuredState = {}
+local BodyJumpedState = {}
+local AstralProjection = Workspace:FindFirstChild("AstralProjection")
 
-local lastPlayerCache = 0
-local lastAstralScan = 0
-local lastCleanup = 0
-local now = 0
+-- ---- POOL SETUP (ca la motorul mic) -----------------------
+local pool = {}
+for i = 1, POOL do
+    local label = Drawing.new("Text")
+    label.Font = Drawing.Fonts.SystemBold
+    label.Size = 14
+    label.Center = true
+    label.Outline = true
+    label.Color = COLORS.Default
+    label.Visible = false
+    pool[i] = label
+end
 
-local MaxDistanceSquared =
-    CONFIG.MaxDistance * CONFIG.MaxDistance
-
-
+-- ---- HELPERS (din original) -------------------------------
 local function GetSpecieColor(specie)
-    if specie == nil then
-        return COLORS.Default
-    end
-
+    if not specie then return COLORS.Default end
     specie = tostring(specie)
-
     local cached = SpeciesCache[specie]
-
-    if cached then
-        return cached
-    end
-
-    local color = SPECIE_COLORS[specie]
-
-    if not color then
-        color = COLORS.Default
-    end
-
+    if cached then return cached end
+    local color = SPECIE_COLORS[specie] or COLORS.Default
     SpeciesCache[specie] = color
-
     return color
 end
 
-
 local function GetBasePart(object)
-    if not object then
-        return nil
-    end
-
-    if object:IsA("BasePart") then
-        return object
-    end
-
+    if not object then return nil end
+    if object:IsA("BasePart") then return object end
     if object:IsA("Model") then
         local primary = object.PrimaryPart
-
-        if primary and primary:IsA("BasePart") then
-            return primary
-        end
-
+        if primary and primary:IsA("BasePart") then return primary end
         local root = object:FindFirstChild("HumanoidRootPart")
-
-        if root and root:IsA("BasePart") then
-            return root
-        end
-
+        if root and root:IsA("BasePart") then return root end
         local head = object:FindFirstChild("Head")
-
-        if head and head:IsA("BasePart") then
-            return head
-        end
-
-        return object:FindFirstChildWhichIsA(
-            "BasePart",
-            true
-        )
+        if head and head:IsA("BasePart") then return head end
+        return object:FindFirstChildWhichIsA("BasePart", true)
     end
-
     return nil
 end
 
-
+local maxDistSq = CONFIG.MaxDistance * CONFIG.MaxDistance
 local function IsInRange(position, origin)
-    if not position then
-        return false
-    end
-
+    if not position then return false end
     local x = position.X - origin.X
     local y = position.Y - origin.Y
     local z = position.Z - origin.Z
-
-    return
-        x * x +
-        y * y +
-        z * z <= MaxDistanceSquared
+    return x*x + y*y + z*z <= maxDistSq
 end
 
-
-local DrawPool = table.create(CONFIG.MaxDrawings)
-
-for i = 1, CONFIG.MaxDrawings do
-    local drawing = Drawing.new("Text")
-
-    drawing.Font = Drawing.Fonts.SystemBold
-    drawing.Center = true
-    drawing.Outline = true
-    drawing.Visible = false
-
-    DrawPool[i] = drawing
-end
-
-
-local function HideAllDrawings()
-    for i = 1, CONFIG.MaxDrawings do
-        DrawPool[i].Visible = false
-    end
-end
-
-
-local function SetDrawing(index, text, position, color)
-    local drawing = DrawPool[index]
-
-    if not drawing then
-        return
-    end
-
-    drawing.Text = text
-    drawing.Position = position
-    drawing.Color = color
-    drawing.Visible = true
-end
-
-
-local function UpdatePlayerItems(data, player, currentTime)
-    if currentTime - data.LastItemUpdate <
-        CONFIG.ItemCacheInterval
-    then
-        return
-    end
-
-    data.LastItemUpdate = currentTime
-
+-- ---- ITEMS FUNCTIONS (din original) ------------------------
+local function UpdatePlayerItems(data, player)
     local backpack = player:FindFirstChild("Backpack")
-
-    if not backpack then
-        data.ItemCount = 0
-        return
-    end
-
+    if not backpack then data.ItemCount = 0 return end
     local children = backpack:GetChildren()
     local count = 0
-
     for i = 1, #children do
-        local itemName =
-            ITEM_NAMES[children[i].Name]
-
+        local itemName = ITEM_NAMES[children[i].Name]
         if itemName then
             count = count + 1
             data.Items[count] = itemName
         end
     end
-
     for i = count + 1, data.ItemCount do
         data.Items[i] = nil
     end
-
     data.ItemCount = count
 end
 
-
 local function UpdateIWOSCache()
-    local folder =
-        Workspace:FindFirstChild(
-            "IndestructibleWhiteOakStake"
-        )
-
+    local folder = Workspace:FindFirstChild("IndestructibleWhiteOakStake")
     if not folder then
-        for i = 1, IWOSCount do
-            IWOSCache[i] = nil
-        end
-
         IWOSCount = 0
         return
     end
-
     local children = folder:GetChildren()
     local count = 0
-
     for i = 1, #children do
         local part = GetBasePart(children[i])
-
         if part then
             count = count + 1
             IWOSCache[count] = part
         end
     end
-
-    for i = count + 1, IWOSCount do
-        IWOSCache[i] = nil
-    end
-
     IWOSCount = count
 end
 
-
 local function UpdateCureCache()
-    local interactables =
-        Workspace:FindFirstChild("Interactables")
-
-    if not interactables then
-        CureCache[1] = nil
-        CureCount = 0
-        return
-    end
-
-    local silasTomb =
-        interactables:FindFirstChild("SilasTomb")
-
-    if not silasTomb then
-        CureCache[1] = nil
-        CureCount = 0
-        return
-    end
-
-    local cureBox =
-        silasTomb:FindFirstChild("CureBox")
-
-    if not cureBox then
-        CureCache[1] = nil
-        CureCount = 0
-        return
-    end
-
-    local cure =
-        cureBox:FindFirstChild("TheCure")
-
+    local interactables = Workspace:FindFirstChild("Interactables")
+    if not interactables then CureCount = 0 return end
+    local silasTomb = interactables:FindFirstChild("SilasTomb")
+    if not silasTomb then CureCount = 0 return end
+    local cureBox = silasTomb:FindFirstChild("CureBox")
+    if not cureBox then CureCount = 0 return end
+    local cure = cureBox:FindFirstChild("TheCure")
     local part = GetBasePart(cure)
-
     if part then
         CureCache[1] = part
         CureCount = 1
     else
-        CureCache[1] = nil
         CureCount = 0
     end
 end
 
-
-local function UpdatePlayerCache(currentTime)
-    local players = Players:GetPlayers()
-    local count = 0
-
-    for i = 1, #players do
-        local player = players[i]
-
-        if player ~= LocalPlayer then
-            local character = player.Character
-
-            if character then
-                local head =
-                    character:FindFirstChild("Head")
-
-                if head and head:IsA("BasePart") then
-                    count = count + 1
-
-                    local data =
-                        CachedPlayers[player]
-
-                    if not data then
-                        data = {
-                            Character = character,
-                            Head = head,
-                            Root = nil,
-
-                            CharacterName = player.Name,
-                            Username = player.Name,
-
-                            SpecieColor =
-                                COLORS.Default,
-
-                            Items = table.create(4),
-                            ItemCount = 0,
-
-                            LastItemUpdate = 0,
-                        }
-
-                        CachedPlayers[player] = data
-                    end
-
-                    data.Character = character
-                    data.Head = head
-
-                    local root =
-                        character:FindFirstChild(
-                            "HumanoidRootPart"
-                        )
-
-                    if root and root:IsA("BasePart") then
-                        data.Root = root
-                    else
-                        data.Root = nil
-                    end
-
-                    local characterName =
-                        player:GetAttribute(
-                            "CharacterName"
-                        )
-
-                    if characterName ~= nil
-                        and tostring(characterName) ~= ""
-                    then
-                        data.CharacterName =
-                            tostring(characterName)
-                    else
-                        data.CharacterName =
-                            player.Name
-                    end
-
-                    local specie =
-                        character:GetAttribute(
-                            "SpecieType"
-                        )
-
-                    data.SpecieColor =
-                        GetSpecieColor(specie)
-
-                    data.Username = player.Name
-
-                    UpdatePlayerItems(
-                        data,
-                        player,
-                        currentTime
-                    )
-
-                    PlayerList[count] = player
-                end
-            end
-        end
-    end
-
-    for i = count + 1, PlayerCount do
-        PlayerList[i] = nil
-    end
-
-    PlayerCount = count
-
-    UpdateIWOSCache()
-    UpdateCureCache()
-end
-
-
+-- ---- ASTRAL FUNCTIONS (din original) -----------------------
 local function FindAstralPart(model)
-    if not model then
-        return nil
-    end
-
-    if not model.Parent then
-        return nil
-    end
-
-    local root =
-        model:FindFirstChild("HumanoidRootPart")
-
-    if root and root:IsA("BasePart") then
-        return root
-    end
-
-    local head =
-        model:FindFirstChild("Head")
-
-    if head and head:IsA("BasePart") then
-        return head
-    end
-
+    if not model or not model.Parent then return nil end
+    local root = model:FindFirstChild("HumanoidRootPart")
+    if root and root:IsA("BasePart") then return root end
+    local head = model:FindFirstChild("Head")
+    if head and head:IsA("BasePart") then return head end
     local primary = model.PrimaryPart
-
-    if primary and primary:IsA("BasePart") then
-        return primary
-    end
-
-    return model:FindFirstChildWhichIsA(
-        "BasePart",
-        true
-    )
+    if primary and primary:IsA("BasePart") then return primary end
+    return model:FindFirstChildWhichIsA("BasePart", true)
 end
-
 
 local function CreateAstralDrawing(model)
-    local drawing =
-        AstralDrawings[model]
-
-    if drawing then
-        return drawing
-    end
-
+    local drawing = AstralDrawings[model]
+    if drawing then return drawing end
     drawing = Drawing.new("Text")
-
-    drawing.Font =
-        Drawing.Fonts.SystemBold
-
+    drawing.Font = Drawing.Fonts.SystemBold
     drawing.Center = true
     drawing.Outline = true
     drawing.Text = "[Astral Body]"
     drawing.Color = COLORS.Astral
+    drawing.Size = 13
     drawing.Visible = false
-
     AstralDrawings[model] = drawing
-
     return drawing
 end
 
-
-local function RemoveAstralDrawing(model)
-    local drawing =
-        AstralDrawings[model]
-
-    if drawing then
-        drawing.Visible = false
-        drawing:Remove()
-        AstralDrawings[model] = nil
-    end
-end
-
-
 local function UpdateAstralCache()
-    if not AstralProjection
-        or not AstralProjection.Parent
-    then
-        AstralProjection =
-            Workspace:FindFirstChild(
-                "AstralProjection"
-            )
-
-        if not AstralProjection then
-            return
-        end
+    if not AstralProjection or not AstralProjection.Parent then
+        AstralProjection = Workspace:FindFirstChild("AstralProjection")
+        if not AstralProjection then return end
     end
-
-    local children =
-        AstralProjection:GetChildren()
-
+    local children = AstralProjection:GetChildren()
     local active = {}
-
     for i = 1, #children do
         local model = children[i]
-
         if model:IsA("Model") then
-            local part =
-                FindAstralPart(model)
-
+            local part = FindAstralPart(model)
             if part then
                 AstralCache[model] = part
                 active[model] = true
-
                 CreateAstralDrawing(model)
             end
         end
     end
-
     for model in next, AstralCache do
-        if not active[model]
-            or not model.Parent
-        then
+        if not active[model] or not model.Parent then
             AstralCache[model] = nil
-            RemoveAstralDrawing(model)
+            local drawing = AstralDrawings[model]
+            if drawing then
+                drawing.Visible = false
+                drawing:Remove()
+                AstralDrawings[model] = nil
+            end
         else
-            local part =
-                AstralCache[model]
-
-            if not part
-                or not part.Parent
-            then
-                AstralCache[model] =
-                    FindAstralPart(model)
+            local part = AstralCache[model]
+            if not part or not part.Parent then
+                AstralCache[model] = FindAstralPart(model)
             end
         end
     end
 end
 
-
+-- ---- CURED STATE (din original) ----------------------------
 local function UpdateCuredState()
     local players = Players:GetPlayers()
-
     for i = 1, #players do
         local player = players[i]
-
-        local cured =
-            player:GetAttribute("Cured") == true
-
+        local cured = player:GetAttribute("Cured") == true
         local id = player.UserId
         local previous = CuredState[id]
-
         if previous == nil then
             CuredState[id] = cured
-
         elseif previous ~= cured then
             CuredState[id] = cured
-
             if cured then
-                local name =
-                    player:GetAttribute(
-                        "CharacterName"
-                    )
-
-                if name == nil
-                    or tostring(name) == ""
-                then
+                local name = player:GetAttribute("CharacterName")
+                if name == nil or tostring(name) == "" then
                     name = player.Name
                 end
-
-                name = tostring(name):gsub(
-                    "^%s*(.-)%s*$",
-                    "%1"
-                )
-
-                notify(
-                    name .. " has been cured!",
-                    "Cured",
-                    4
-                )
+                name = tostring(name):gsub("^%s*(.-)%s*$", "%1")
+                notify(name .. " has been cured!", "Cured", 4)
             end
         end
     end
 end
 
-
-local function Cleanup()
-    for player in next, CachedPlayers do
-        if not player.Parent then
-            CachedPlayers[player] = nil
+-- ---- BODYJUMPED STATE ---------------------------------------
+local function UpdateBodyJumpedState()
+    local players = Players:GetPlayers()
+    for i = 1, #players do
+        local player = players[i]
+        local bodyJumped = player:GetAttribute("BodyJumped") == true
+        local id = player.UserId
+        local previous = BodyJumpedState[id]
+        
+        if previous == nil then
+            BodyJumpedState[id] = bodyJumped
+        elseif previous ~= bodyJumped then
+            BodyJumpedState[id] = bodyJumped
+            if bodyJumped then
+                local name = player:GetAttribute("CharacterName")
+                if name == nil or tostring(name) == "" then
+                    name = player.Name
+                end
+                name = tostring(name):gsub("^%s*(.-)%s*$", "%1")
+                notify(name .. " has been bodyjumped by Esther Mikaleson!", "BodyJumped", 4)
+            end
         end
     end
+end
 
-    local players =
-        Players:GetPlayers()
-
+-- ---- CLEANUP (din original) --------------------------------
+local function Cleanup()
+    local players = Players:GetPlayers()
     local activePlayers = {}
-
     for i = 1, #players do
-        activePlayers[
-            players[i].UserId
-        ] = true
+        activePlayers[players[i].UserId] = true
     end
-
     for id in next, CuredState do
         if not activePlayers[id] then
             CuredState[id] = nil
         end
     end
-
+    for id in next, BodyJumpedState do
+        if not activePlayers[id] then
+            BodyJumpedState[id] = nil
+        end
+    end
     table.clear(SpeciesCache)
 end
 
-
-UpdatePlayerCache(0)
-UpdateAstralCache()
-UpdateCuredState()
-
-notify(
-    "Dav's Hub loaded successfully!",
-    "Loaded",
-    4
-)
-
-
-RunService.RenderStepped:Connect(function(deltaTime)
-    now = now + deltaTime
-
-    if now - lastPlayerCache >=
-        CONFIG.PlayerCacheInterval
-    then
-        lastPlayerCache = now
-        UpdatePlayerCache(now)
+-- ---- COLLECTOR (exact ca la motorul mic) --------------------
+task.spawn(function()
+    while running do
+        local out = {}
+        local players = Players:GetPlayers()
+        local origin = nil
+        local localChar = lp.Character
+        if localChar then
+            local localRoot = localChar:FindFirstChild("HumanoidRootPart")
+            if localRoot and localRoot:IsA("BasePart") then
+                origin = localRoot.Position
+            end
+        end
+        
+        -- Update all caches
+        UpdateIWOSCache()
+        UpdateCureCache()
+        UpdateAstralCache()
         UpdateCuredState()
-    end
-
-    if now - lastAstralScan >=
-        CONFIG.AstralScanInterval
-    then
-        lastAstralScan = now
-
-        if ESP.Astral then
-            UpdateAstralCache()
-        end
-    end
-
-    if now - lastCleanup >=
-        CONFIG.CleanupInterval
-    then
-        lastCleanup = now
+        UpdateBodyJumpedState()
         Cleanup()
-    end
 
+        for i = 1, #players do
+            local plr = players[i]
+            if SHOW_SELF or plr ~= lp then
+                local char = plr.Character
+                local head = char and char:FindFirstChild("Head")
+                if head and head:IsA("BasePart") then
+                    if not origin or IsInRange(head.Position, origin) then
+                        -- Get attributes
+                        local charName = plr:GetAttribute("CharacterName")
+                        local specie = char:GetAttribute("SpecieType")
+                        local isBodyJumped = plr:GetAttribute("BodyJumped") == true
+                        
+                        -- Determine color (override if bodyjumped)
+                        local specieColor = GetSpecieColor(specie)
+                        local displayColor = isBodyJumped and COLORS.BodyJumped or specieColor
+                        
+                        -- Build label text with [Esther] tag if bodyjumped
+                        local labelText = (charName and charName ~= "") and charName or plr.Name
+                        if isBodyJumped and ESP.BodyJumped then
+                            labelText = labelText .. " [Esther]"
+                        end
+                        
+                        -- Get items
+                        local itemData = { Items = {}, ItemCount = 0 }
+                        UpdatePlayerItems(itemData, plr)
+                        
+                        out[#out + 1] = {
+                            head = head,
+                            text = labelText,
+                            color = displayColor,
+                            player = plr,
+                            items = itemData.Items,
+                            itemCount = itemData.ItemCount,
+                            isBodyJumped = isBodyJumped,
+                        }
+                    end
+                end
+            end
+        end
+        
+        targets = out
+        task.wait(COLLECT_RATE)
+    end
+end)
+
+-- ---- RENDERER (exact ca la motorul mic) ---------------------
+local conn
+conn = RunService.RenderStepped:Connect(function()
     if not ESP.Enabled then
-        HideAllDrawings()
+        for i = 1, POOL do pool[i].Visible = false end
+        for _, drawing in next, AstralDrawings do drawing.Visible = false end
         return
     end
 
-    local localCharacter =
-        LocalPlayer.Character
-
-    if not localCharacter then
-        HideAllDrawings()
+    local localChar = lp.Character
+    if not localChar then
+        for i = 1, POOL do pool[i].Visible = false end
         return
     end
 
-    local localRoot =
-        localCharacter:FindFirstChild(
-            "HumanoidRootPart"
-        )
-
-    if not localRoot
-        or not localRoot:IsA("BasePart")
-    then
-        HideAllDrawings()
+    local localRoot = localChar:FindFirstChild("HumanoidRootPart")
+    if not localRoot or not localRoot:IsA("BasePart") then
+        for i = 1, POOL do pool[i].Visible = false end
         return
     end
 
-    local origin =
-        localRoot.Position
+    local origin = localRoot.Position
+    local list = targets
+    local n = 0
+    local maxDrawings = CONFIG.MaxDrawings
 
-    local used = 0
-
-
-    -- PLAYER ESP
-
-    for i = 1, PlayerCount do
-        if used >= CONFIG.MaxDrawings - 10 then
-            break
-        end
-
-        local player =
-            PlayerList[i]
-
-        local data =
-            CachedPlayers[player]
-
-        if data then
-            local head = data.Head
-
-            if head
-                and head.Parent
-                and head:IsA("BasePart")
-            then
-                local position =
-                    head.Position
-
-                if IsInRange(
-                    position,
-                    origin
-                ) then
-                    local screen, visible =
-                        WorldToScreen(
-                            position +
-                            Vector3.new(
-                                0,
-                                CONFIG.CharacterOffset,
-                                0
-                            )
-                        )
-
-                    if visible then
-                        local x = screen.X
-                        local y = screen.Y
-
-                        if ESP.CharacterName then
-                            used = used + 1
-
-                            SetDrawing(
-                                used,
-                                data.CharacterName,
-                                Vector2.new(
-                                    x,
-                                    y
-                                ),
-                                data.SpecieColor
-                            )
-                        end
-
-                        if ESP.Username
-                            and used <
-                                CONFIG.MaxDrawings
-                        then
-                            used = used + 1
-
-                            SetDrawing(
-                                used,
-                                "@" ..
-                                    data.Username,
-                                Vector2.new(
-                                    x,
-                                    y +
-                                    CONFIG.UsernameOffset
-                                ),
-                                COLORS.Username
-                            )
-                        end
-
-                        if ESP.Items
-                            and data.ItemCount > 0
-                        then
-                            local itemY =
-                                y +
-                                CONFIG.ItemStartOffset
-
-                            for j = 1,
-                                data.ItemCount
-                            do
-                                if used >=
-                                    CONFIG.MaxDrawings
-                                then
-                                    break
-                                end
-
-                                used = used + 1
-
-                                SetDrawing(
-                                    used,
-                                    "[" ..
-                                        data.Items[j] ..
-                                        "]",
-                                    Vector2.new(
-                                        x,
-                                        itemY
-                                    ),
-                                    COLORS.Item
-                                )
-
-                                itemY =
-                                    itemY +
-                                    CONFIG.ItemGap
-                            end
+    for i = 1, #list do
+        if n >= POOL then break end
+        local t = list[i]
+        
+        if t.head and t.head.Parent then
+            local headPos = t.head.Position
+            
+            if IsInRange(headPos, origin) then
+                local pos3D = headPos + Vector3.new(0, CONFIG.CharacterOffset, 0)
+                local pos2D, visible = WorldToScreen(pos3D)
+                
+                if visible then
+                    local x = pos2D.X
+                    local y = pos2D.Y
+                    
+                    -- Character Name (size 14)
+                    if ESP.CharacterName then
+                        n = n + 1
+                        local lbl = pool[n]
+                        lbl.Text = t.text
+                        lbl.Color = t.color
+                        lbl.Position = pos2D
+                        lbl.Size = 14
+                        lbl.Visible = true
+                    end
+                    
+                    -- Username (size 13)
+                    if ESP.Username and n < POOL then
+                        n = n + 1
+                        local lbl = pool[n]
+                        lbl.Text = "@" .. t.player.Name
+                        lbl.Color = COLORS.Username
+                        lbl.Position = Vector2.new(x, y + CONFIG.UsernameOffset)
+                        lbl.Size = 13
+                        lbl.Visible = true
+                    end
+                    
+                    -- Items (size 12)
+                    if ESP.Items and t.itemCount > 0 then
+                        local itemY = y + CONFIG.ItemStartOffset
+                        for j = 1, t.itemCount do
+                            if n >= POOL then break end
+                            n = n + 1
+                            local lbl = pool[n]
+                            lbl.Text = "[" .. t.items[j] .. "]"
+                            lbl.Color = COLORS.Item
+                            lbl.Position = Vector2.new(x, itemY)
+                            lbl.Size = 12
+                            lbl.Visible = true
+                            itemY = itemY + CONFIG.ItemGap
                         end
                     end
                 end
             end
         end
     end
-
-
-    -- MAP ITEMS
-
+    
+    -- Map Items (size 12)
     if ESP.MapItems then
-
         for i = 1, IWOSCount do
-            if used >= CONFIG.MaxDrawings then
-                break
-            end
-
-            local part =
-                IWOSCache[i]
-
-            if part
-                and part.Parent
-                and part:IsA("BasePart")
-            then
-                local position =
-                    part.Position
-
-                if IsInRange(
-                    position,
-                    origin
-                ) then
-                    local screen, visible =
-                        WorldToScreen(
-                            position +
-                            Vector3.new(
-                                0,
-                                CONFIG.MapItemOffset,
-                                0
-                            )
-                        )
-
+            if n >= POOL then break end
+            local part = IWOSCache[i]
+            if part and part.Parent and part:IsA("BasePart") then
+                if IsInRange(part.Position, origin) then
+                    local pos2D, visible = WorldToScreen(part.Position + Vector3.new(0, CONFIG.MapItemOffset, 0))
                     if visible then
-                        used = used + 1
-
-                        SetDrawing(
-                            used,
-                            "[Indestructible]",
-                            screen,
-                            COLORS.MapItem
-                        )
+                        n = n + 1
+                        local lbl = pool[n]
+                        lbl.Text = "[Indestructible]"
+                        lbl.Color = COLORS.MapItem
+                        lbl.Position = pos2D
+                        lbl.Size = 12
+                        lbl.Visible = true
                     end
                 end
             end
         end
-
-
+        
         for i = 1, CureCount do
-            if used >= CONFIG.MaxDrawings then
-                break
-            end
-
-            local part =
-                CureCache[i]
-
-            if part
-                and part.Parent
-                and part:IsA("BasePart")
-            then
-                local position =
-                    part.Position
-
-                if IsInRange(
-                    position,
-                    origin
-                ) then
-                    local screen, visible =
-                        WorldToScreen(
-                            position +
-                            Vector3.new(
-                                0,
-                                CONFIG.MapItemOffset,
-                                0
-                            )
-                        )
-
+            if n >= POOL then break end
+            local part = CureCache[i]
+            if part and part.Parent and part:IsA("BasePart") then
+                if IsInRange(part.Position, origin) then
+                    local pos2D, visible = WorldToScreen(part.Position + Vector3.new(0, CONFIG.MapItemOffset, 0))
                     if visible then
-                        used = used + 1
-
-                        SetDrawing(
-                            used,
-                            "[Cure]",
-                            screen,
-                            COLORS.MapItem
-                        )
+                        n = n + 1
+                        local lbl = pool[n]
+                        lbl.Text = "[Cure]"
+                        lbl.Color = COLORS.MapItem
+                        lbl.Position = pos2D
+                        lbl.Size = 12
+                        lbl.Visible = true
                     end
                 end
             end
         end
     end
-
-
-    -- ASTRAL PROJECTION
-
+    
+    -- Astral (size 13)
     if ESP.Astral then
         for model, part in next, AstralCache do
-            local drawing =
-                AstralDrawings[model]
-
+            local drawing = AstralDrawings[model]
             if drawing then
-                if not model.Parent then
-                    drawing.Visible = false
-                elseif not part
-                    or not part.Parent
-                    or not part:IsA("BasePart")
-                then
+                if not model.Parent or not part or not part.Parent or not part:IsA("BasePart") then
                     drawing.Visible = false
                 else
-                    local position =
-                        part.Position
-
-                    if IsInRange(
-                        position,
-                        origin
-                    ) then
-                        local screen, visible =
-                            WorldToScreen(
-                                position +
-                                Vector3.new(
-                                    0,
-                                    CONFIG.AstralOffset,
-                                    0
-                                )
-                            )
-
+                    if IsInRange(part.Position, origin) then
+                        local pos2D, visible = WorldToScreen(part.Position + Vector3.new(0, CONFIG.AstralOffset, 0))
                         if visible then
-                            drawing.Position =
-                                screen
-
+                            drawing.Position = pos2D
+                            drawing.Size = 13
                             drawing.Visible = true
                         else
                             drawing.Visible = false
@@ -952,21 +534,28 @@ RunService.RenderStepped:Connect(function(deltaTime)
             end
         end
     else
-        for _, drawing in next,
-            AstralDrawings
-        do
+        for _, drawing in next, AstralDrawings do
             drawing.Visible = false
         end
     end
-
-
-    -- HIDE UNUSED PLAYER/MAP DRAWINGS
-
-    for i = used + 1,
-        CONFIG.MaxDrawings
-    do
-        if DrawPool[i].Visible then
-            DrawPool[i].Visible = false
-        end
+    
+    -- Hide unused slots
+    for i = n + 1, POOL do
+        pool[i].Visible = false
     end
 end)
+
+-- ---- STOP FUNCTION (ca la motorul mic) ----------------------
+_G.ESPStop = function()
+    running = false
+    if conn then conn:Disconnect() end
+    for i = 1, POOL do pool[i]:Remove() end
+    for _, drawing in next, AstralDrawings do drawing:Remove() end
+    _G.ESPStop = nil
+    print("ESP stopped.")
+end
+notify(
+    "Dav's Hub loaded successfully!",  
+    "Loaded",                        
+    4                                  
+)
