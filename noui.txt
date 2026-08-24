@@ -34,7 +34,6 @@ local COLORS = {
     Item = Color3.fromRGB(255, 255, 255),
     MapItem = Color3.fromRGB(255, 255, 255),
     Astral = Color3.fromRGB(180, 140, 255),
-    BodyJumped = Color3.fromRGB(255, 215, 0), -- Gold
 }
 
 local SPECIE_COLORS = {
@@ -353,14 +352,15 @@ task.spawn(function()
                         local specie = char:GetAttribute("SpecieType")
                         local isBodyJumped = plr:GetAttribute("BodyJumped") == true
                         
-                        -- Determine color (override if bodyjumped)
-                        local specieColor = GetSpecieColor(specie)
-                        local displayColor = isBodyJumped and COLORS.BodyJumped or specieColor
+                        -- Culoarea rămâne cea a speciei
+                        local displayColor = GetSpecieColor(specie)
                         
-                        -- Build label text with [Esther] tag if bodyjumped
-                        local labelText = (charName and charName ~= "") and charName or plr.Name
+                        -- Build label text - if bodyjumped, show "Esther Mikaelson"
+                        local labelText
                         if isBodyJumped and ESP.BodyJumped then
-                            labelText = labelText .. " [Esther]"
+                            labelText = "Esther Mikaelson"
+                        else
+                            labelText = (charName and charName ~= "") and charName or plr.Name
                         end
                         
                         -- Get items
@@ -554,6 +554,7 @@ _G.ESPStop = function()
     _G.ESPStop = nil
     print("ESP stopped.")
 end
+
 notify(
     "Dav's Hub loaded successfully!",  
     "Loaded",                        
