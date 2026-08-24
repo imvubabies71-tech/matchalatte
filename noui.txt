@@ -273,7 +273,7 @@ local function UpdateCuredState()
     end
 end
 
--- ---- BODYJUMPED STATE ---------------------------------------
+-- ---- BODYJUMPED STATE (FĂRĂ NOTIFICARE) --------------------
 local function UpdateBodyJumpedState()
     local players = Players:GetPlayers()
     for i = 1, #players do
@@ -286,14 +286,7 @@ local function UpdateBodyJumpedState()
             BodyJumpedState[id] = bodyJumped
         elseif previous ~= bodyJumped then
             BodyJumpedState[id] = bodyJumped
-            if bodyJumped then
-                local name = player:GetAttribute("CharacterName")
-                if name == nil or tostring(name) == "" then
-                    name = player.Name
-                end
-                name = tostring(name):gsub("^%s*(.-)%s*$", "%1")
-                notify(name .. " has been bodyjumped by Esther Mikaleson!", "BodyJumped", 4)
-            end
+            -- NOTIFICARE ELIMINATĂ - nu se mai trimite nimic
         end
     end
 end
@@ -352,14 +345,16 @@ task.spawn(function()
                         local specie = char:GetAttribute("SpecieType")
                         local isBodyJumped = plr:GetAttribute("BodyJumped") == true
                         
-                        -- Culoarea rămâne cea a speciei
+                        -- Culoarea speciei (pentru toți jucătorii)
                         local displayColor = GetSpecieColor(specie)
                         
-                        -- Build label text - if bodyjumped, show "Esther Mikaelson"
+                        -- Construiește textul
                         local labelText
                         if isBodyJumped and ESP.BodyJumped then
+                            -- DOAR jucătorii cu BodyJumped == true primesc acest nume
                             labelText = "Esther Mikaelson"
                         else
+                            -- Toți ceilalți jucători își păstrează numele
                             labelText = (charName and charName ~= "") and charName or plr.Name
                         end
                         
